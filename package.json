@@ -1,0 +1,20 @@
+{
+  "name": "carlink",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CarLink MVP — monorepo (Expo mobile + Next.js web/admin + Supabase)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "mobile": "npm --workspace apps/mobile run start",
+    "web": "npm --workspace apps/web run dev",
+    "build:web": "npm --workspace apps/web run build",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

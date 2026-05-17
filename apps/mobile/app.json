@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "CarLink",
+    "slug": "carlink",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "carlink",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0B1F3A"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.carlink.app"
+    },
+    "android": {
+      "package": "com.carlink.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B1F3A"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
