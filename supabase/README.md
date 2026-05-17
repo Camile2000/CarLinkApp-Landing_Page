@@ -10,26 +10,30 @@
 
 ## Contenu du schéma
 
-- **11 tables** : `profiles`, `vehicles`, `garages`, `garage_photos`, `service_requests`,
-  `request_photos`, `quotes`, `conversations`, `messages`, `reviews`, `notifications`.
-- **5 enums** : rôles, statuts garage/demande/devis, types de notification.
+Aligné sur la spec « Architecture du projet » du directeur technique.
+
+- **9 tables** : `users`, `vehicles`, `garages`, `quote_requests`, `quotes`,
+  `messages`, `reviews`, `invoices`, `notifications`.
+- **5 enums** : `user_role` (conductor/garage/admin), `app_language`,
+  `request_urgency`, `request_status`, `payment_status`.
 - **Triggers** :
-  - `updated_at` automatique sur les tables principales.
-  - Création automatique du profil à l'inscription (`auth.users` → `profiles`).
-  - Recalcul de `rating_avg` / `rating_count` du garage à chaque avis.
+  - `updated_at` automatique (`users`, `garages`).
+  - Création automatique du profil à l'inscription (`auth.users` → `public.users`).
+  - Recalcul de `rating` / `review_count` du garage à chaque avis (avis approuvés uniquement).
   - Passage automatique d'une demande en `quoted` au premier devis.
 - **RLS activé sur toutes les tables** : un utilisateur ne voit que ses données,
-  les garages approuvés voient les demandes ouvertes, l'admin voit tout
-  (helper `is_admin()`).
-- **Realtime** activé sur `messages`, `conversations`, `notifications` (chat & notifs live).
-- **Storage** : buckets `avatars`, `garages`, `vehicles`, `requests` + policies.
+  un garagiste voit les demandes qui le concernent, l'admin voit tout
+  (helpers `is_admin()` et `owns_garage()`).
+- **Realtime** activé sur `messages`, `quote_requests`, `notifications`.
+- **Storage** : bucket unique `photos` (avatars, garages, véhicules, demandes,
+  interventions, documents) + policies.
 
 ## Créer un admin
 
 Après inscription d'un compte, dans le SQL Editor :
 
 ```sql
-update public.profiles set role = 'admin' where id = '<uuid-du-user>';
+update public.users set role = 'admin' where id = '<uuid-du-user>';
 ```
 
 ## Réinitialiser (dev uniquement)

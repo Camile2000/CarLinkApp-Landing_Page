@@ -30,28 +30,35 @@ Toute la sécurité repose sur **Row Level Security** côté Postgres : même si
 
 ## 3. Parcours métier
 
-1. **Inscription** → trigger `handle_new_user` crée automatiquement une ligne `profiles` (rôle par défaut `driver`, ou `garage_owner` via metadata).
-2. **Garage** → un `garage_owner` crée un `garages` en statut `pending`. L'admin l'`approuve` depuis `apps/web/app/admin/garages`.
-3. **Demande** → un `driver` crée un `service_requests` (`open`). Visible des garages approuvés (policy RLS).
-4. **Devis** → un garage crée un `quotes` ; le trigger `mark_request_quoted` passe la demande en `quoted`.
-5. **Chat** → à l'acceptation d'un devis, une `conversations` est ouverte ; les `messages` circulent via Supabase **Realtime**.
-6. **Avis** → après `completed`, le `driver` poste un `reviews` ; le trigger `recalc_garage_rating` met à jour `rating_avg`/`rating_count`.
-7. **Notifications** → lignes `notifications` (in-app) + Expo Push (semaine 8).
+1. **Inscription** → trigger `handle_new_user` crée automatiquement une ligne `users` (rôle `conductor` par défaut, ou `garage` via metadata, langue FR/EN).
+2. **Garage** → un `garage` crée son `garages`. L'admin le **certifie** / vérifie les docs depuis `apps/web/app/admin/garages` ; il peut le **suspendre**.
+3. **Demande** → un `conductor` crée un `quote_requests` (`pending`) avec type de service, urgence et photos. Visible des garages non suspendus (policy RLS).
+4. **Devis** → un garage crée un `quotes` structuré (diagnostic + pièces + main d'œuvre + délai) ; le trigger `mark_request_quoted` passe la demande en `quoted`.
+5. **Match** → le conducteur compare et accepte ; `quote_requests.status` → `accepted` (`accepted_at`).
+6. **Suivi + Chat** → le garage fait évoluer le statut (`in_progress` → `completed`) ; les `messages` circulent via Supabase **Realtime** ; photos avant/après dans Storage.
+7. **Facture** → à `completed`, génération d'un `invoices` ; paiement CinetPay (phase 2).
+8. **Avis** → le `conductor` poste un `reviews` (note + 6 critères) ; le trigger `recalc_garage_rating` met à jour `rating`/`review_count` (avis approuvés uniquement). L'admin modère via `approved`/`flagged`.
+9. **Notifications** → lignes `notifications` (in-app) + Expo Push.
 
 ## 4. Modèle de données
 
-11 tables, 5 enums — détail dans [`supabase/schema.sql`](../supabase/schema.sql). Relations principales :
+9 tables, 5 enums — détail dans [`supabase/schema.sql`](../supabase/schema.sql). Relations principales :
 
 ```
-profiles 1───* vehicles
-profiles 1───* garages 1───* garage_photos
-profiles 1───* service_requests *───1 vehicles
-service_requests 1───* request_photos
-service_requests 1───* quotes *───1 garages
-service_requests 1───* conversations 1───* messages
-garages 1───* reviews *───1 profiles
-profiles 1───* notifications
+users (conductor | garage | admin)
+  ├─ vehicles            (1 user → N vehicles)
+  ├─ quote_requests      (1 conductor → N requests)
+  │    ├─ quotes         (1 request → N quotes *───1 garages)
+  │    ├─ messages       (1 request → N messages)
+  │    ├─ reviews        (1 request → 1 review)
+  │    └─ invoices       (1 request → N invoices)
+  ├─ garages             (1 user → 1 garage)
+  │    ├─ quote_requests (1 garage → N requests)
+  │    └─ reviews        (1 garage → N reviews)
+  └─ notifications       (1 user → N notifications)
 ```
+
+Voir aussi la roadmap 16 semaines : [`roadmap.md`](./roadmap.md).
 
 ## 5. Conventions de code
 

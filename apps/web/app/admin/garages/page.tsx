@@ -34,6 +34,8 @@ export default async function GaragesAdmin() {
             <tr>
               <th>Nom</th>
               <th>Ville</th>
+              <th>Certifié</th>
+              <th>Docs</th>
               <th>Statut</th>
               <th>Note</th>
             </tr>
@@ -41,11 +43,13 @@ export default async function GaragesAdmin() {
           <tbody>
             {garages.map((g) => (
               <tr key={g.id}>
-                <td>{g.name}</td>
+                <td>{g.garage_name}</td>
                 <td>{g.city ?? '—'}</td>
-                <td>{g.status}</td>
+                <td>{g.is_certified ? '✓' : '—'}</td>
+                <td>{g.documents_verified ? '✓' : '—'}</td>
+                <td>{g.suspended ? 'Suspendu' : 'Actif'}</td>
                 <td>
-                  {g.rating_avg} ({g.rating_count})
+                  {g.rating} ({g.review_count})
                 </td>
               </tr>
             ))}
@@ -53,8 +57,8 @@ export default async function GaragesAdmin() {
         </table>
       )}
       <p style={{ color: 'var(--muted)', marginTop: 24, fontSize: 14 }}>
-        Note : l&apos;approbation/suspension écrira dans <code>garages.status</code>{' '}
-        (action admin via RLS).
+        Note : certifier / suspendre écrit dans <code>garages.is_certified</code>{' '}
+        / <code>garages.suspended</code> (action admin via RLS).
       </p>
     </main>
   );

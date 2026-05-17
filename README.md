@@ -200,17 +200,17 @@ Le schéma crée :
 
 | Table | Rôle |
 |---|---|
-| `profiles` | Utilisateurs (extension de `auth.users`), avec rôle |
-| `vehicles` | Véhicules des conducteurs |
-| `garages` | Garages (statut : pending/approved/suspended) |
-| `garage_photos` | Photos des garages |
-| `service_requests` | Demandes de réparation des conducteurs |
-| `request_photos` | Photos jointes à une demande |
-| `quotes` | Devis envoyés par les garages |
-| `conversations` | Fil de discussion par demande |
-| `messages` | Messages chat temps réel |
-| `reviews` | Avis & notes des conducteurs |
-| `notifications` | Notifications in-app / push |
+| `users` | Utilisateurs (extension de `auth.users`) : rôle `conductor`/`garage`/`admin`, langue FR/EN |
+| `vehicles` | Véhicules des conducteurs (marque, modèle, immat, carburant…) |
+| `garages` | Garages : spécialités, certification, docs vérifiés, suspension, note |
+| `quote_requests` | Demandes de devis (type de service, urgence, photos, statut) |
+| `quotes` | Devis structurés (diagnostic, pièces, main d'œuvre, délai, garantie) |
+| `messages` | Chat temps réel attaché à une demande |
+| `reviews` | Avis vérifiés — 6 critères, modération (`approved`/`flagged`) |
+| `invoices` | Factures (montant, statut de paiement) |
+| `notifications` | Notifications in-app / Expo Push |
+
+> Schéma aligné sur la spec « Architecture du projet » du directeur technique.
 
 Sécurité : **Row Level Security activé sur toutes les tables** (chaque utilisateur ne voit que ses données ; l'admin voit tout). Détails dans [`supabase/README.md`](./supabase/README.md).
 
@@ -287,17 +287,16 @@ iOS nécessite un compte Apple Developer (99 $/an) — **uniquement à partir de
 
 ## 🗓 Roadmap MVP
 
-| Semaine | Objectif |
-|---|---|
-| 1 | Setup stack, schéma DB, auth |
-| 2–3 | Profils, véhicules, carte Google Maps |
-| 4–5 | Demandes de service + devis |
-| 6–7 | Chat temps réel (Supabase Realtime) |
-| 8 | Notifications push |
-| 9 | Avis & notes, dashboard admin |
-| 10 | Tests, polish, recette MVP |
-| 11+ | Intégration paiement (CinetPay) |
-| 14–16 | Builds stores, lancement |
+Plan détaillé semaine par semaine (16 semaines) : [`docs/roadmap.md`](./docs/roadmap.md).
+
+| Phase | Semaines | Objectif |
+|---|---|---|
+| Fondations | S1–S4 | Setup, schéma DB, auth, véhicules, recherche garages, **devis MVP** |
+| Cœur métier | S5–S8 | Devis structurés, match, suivi + chat, **système d'avis** |
+| Pilotage | S9–S10 | Bêta fermée, **dashboard admin** |
+| Paiement & traçabilité | S11–S12 | CinetPay (sandbox), factures, photos intervention |
+| Finition | S13–S15 | Bilingue FR/EN, polish UX, tests terrain, audit RLS |
+| Lancement | S16 | Google Play, soft launch — **MVP en production** |
 
 ---
 
