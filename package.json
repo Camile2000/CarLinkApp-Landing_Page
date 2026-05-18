@@ -8,6 +8,7 @@
     "packages/*"
   ],
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks || true",
     "mobile": "npm --workspace apps/mobile run start",
     "web": "npm --workspace apps/web run dev",
     "build:web": "npm --workspace apps/web run build",

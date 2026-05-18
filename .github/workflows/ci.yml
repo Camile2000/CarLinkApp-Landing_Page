@@ -87,12 +87,30 @@ jobs:
           if [ "$SECRETS_FOUND" -eq 1 ]; then exit 1; fi
           echo "✅ Aucun secret détecté dans le code source"
 
+      # Scan secrets exhaustif sur tout l'historique (gratuit, OSS)
+      - name: Gitleaks (secret scan)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # SAST — règles OSS (injection, XSS, secrets, mauvaises pratiques)
+      - name: Semgrep (SAST)
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: >-
+            p/default
+            p/typescript
+            p/react
+            p/secrets
+
       - name: Security summary
         if: always()
         run: |
           echo "## 🔒 Security Audit" >> "$GITHUB_STEP_SUMMARY"
           echo "- Dependency audit: \`npm audit --audit-level=high --omit=dev\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Secret scan: JWT patterns + Supabase URL detection" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Secret scan: JWT/Supabase patterns + Gitleaks (historique complet)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- SAST: Semgrep (default · typescript · react · secrets)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- CodeQL: workflow dédié (\`codeql.yml\`)" >> "$GITHUB_STEP_SUMMARY"
 
   # ─────────────────────────────────────────────────────────────
   # 3. LINT & TYPECHECK
