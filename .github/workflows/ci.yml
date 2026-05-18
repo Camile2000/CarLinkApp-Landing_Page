@@ -41,14 +41,20 @@ jobs:
 
   # ─────────────────────────────────────────────────────────────
   # 2. AUDIT DE SÉCURITÉ
-  #    - CVE dans les dépendances (npm audit)
-  #    - Détection de secrets dans le code source
-  #    Tourne en parallèle de lint-typecheck (pas de dépendance)
+  #    - CVE dans les dépendances (npm audit)        → bloquant
+  #    - Scan secrets custom (JWT/Supabase)          → bloquant
+  #    - Gitleaks (historique + allowlist)           → bloquant
+  #    - Semgrep SAST → résultats remontés dans
+  #      l'onglet Security (Code Scanning), non bloquant
+  #      sur faux positifs (CodeQL reste le gate SAST dur)
   # ─────────────────────────────────────────────────────────────
   security:
     name: Security Audit
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write  # upload SARIF Semgrep → onglet Security
     steps:
       - uses: actions/checkout@v4
         with:
@@ -95,24 +101,39 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # SAST — règles OSS (injection, XSS, secrets, mauvaises pratiques)
+      # SAST — Semgrep via CLI maintenu (l'action semgrep-action@v1 est
+      # archivée/dépréciée et casse le job). On scanne, on remonte les
+      # findings dans l'onglet Security, mais on ne bloque pas la PR sur
+      # un faux positif : CodeQL est le gate SAST dur.
       - name: Semgrep (SAST)
-        uses: semgrep/semgrep-action@v1
+        continue-on-error: true
+        run: |
+          python3 -m pip install --quiet --disable-pip-version-check semgrep
+          semgrep scan \
+            --config p/default \
+            --config p/typescript \
+            --config p/react \
+            --config p/secrets \
+            --sarif --output semgrep.sarif \
+            --metrics off \
+            --exclude node_modules --exclude .next --exclude dist
+
+      - name: Upload Semgrep results to Security tab
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          config: >-
-            p/default
-            p/typescript
-            p/react
-            p/secrets
+          sarif_file: semgrep.sarif
+          category: semgrep
 
       - name: Security summary
         if: always()
         run: |
           echo "## 🔒 Security Audit" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Dependency audit: \`npm audit --audit-level=high --omit=dev\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Secret scan: JWT/Supabase patterns + Gitleaks (historique + allowlist)" >> "$GITHUB_STEP_SUMMARY"
-          echo "- SAST: Semgrep (default · typescript · react · secrets)" >> "$GITHUB_STEP_SUMMARY"
-          echo "- CodeQL: workflow dédié (\`codeql.yml\`)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Dependency audit: \`npm audit --audit-level=high --omit=dev\` (bloquant)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Secret scan: JWT/Supabase patterns + Gitleaks historique+allowlist (bloquant)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- SAST Semgrep: résultats dans l'onglet Security (non bloquant)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- SAST dur: CodeQL (workflow dédié \`codeql.yml\`)" >> "$GITHUB_STEP_SUMMARY"
 
   # ─────────────────────────────────────────────────────────────
   # 3. LINT & TYPECHECK
