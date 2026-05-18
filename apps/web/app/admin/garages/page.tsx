@@ -1,9 +1,10 @@
-import { supabase } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 import type { Garage } from '@carlink/shared';
 
 export const dynamic = 'force-dynamic';
 
 export default async function GaragesAdmin() {
+  const supabase = createServerSupabaseClient();
   let garages: Garage[] = [];
   let error: string | null = null;
 

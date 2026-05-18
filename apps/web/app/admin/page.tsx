@@ -1,8 +1,9 @@
-import { supabase } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
 
 async function getStats() {
+  const supabase = createServerSupabaseClient();
   const tables = ['users', 'garages', 'quote_requests', 'quotes', 'reviews', 'invoices'] as const;
   const entries = await Promise.all(
     tables.map(async (t) => {

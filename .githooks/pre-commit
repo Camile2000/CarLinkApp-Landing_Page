@@ -1,0 +1,62 @@
+#!/bin/sh
+# =============================================================
+# Hook pré-commit sécurité CarLink — voir SECURITY.md
+# Activation : git config core.hooksPath .githooks
+# (fait automatiquement par `npm install` via le script "prepare")
+# =============================================================
+set -e
+
+RED='\033[0;31m'; GRN='\033[0;32m'; YEL='\033[1;33m'; NC='\033[0m'
+FAIL=0
+
+echo "${YEL}🔒 Hook sécurité CarLink…${NC}"
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$STAGED" ] && exit 0
+
+# ---- 1. Secrets : clé JWT Supabase (eyJ… > 100 chars) hors .example ----
+for f in $STAGED; do
+  case "$f" in
+    *.example|*.md) continue ;;
+  esac
+  [ -f "$f" ] || continue
+  if grep -qE "eyJ[A-Za-z0-9_-]{100,}" "$f"; then
+    echo "${RED}✖ JWT/clé Supabase potentielle dans : $f${NC}"
+    FAIL=1
+  fi
+done
+
+# ---- 2. URL Supabase réelle (hors .example / .md / docs) ----
+for f in $STAGED; do
+  case "$f" in
+    *.example|*.md|docs/*) continue ;;
+  esac
+  [ -f "$f" ] || continue
+  if grep -qE "https://[a-z0-9]{15,}\.supabase\.co" "$f"; then
+    echo "${RED}✖ URL projet Supabase réelle dans : $f (utiliser un placeholder)${NC}"
+    FAIL=1
+  fi
+done
+
+# ---- 3. .env (non .example) jamais commité ----
+for f in $STAGED; do
+  case "$f" in
+    *.env|*/.env|.env) echo "${RED}✖ Fichier .env stagé : $f — interdit${NC}"; FAIL=1 ;;
+  esac
+done
+
+# ---- 4. Gitleaks si installé (optionnel, gratuit) ----
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --no-banner 2>/dev/null || { echo "${RED}✖ Gitleaks a détecté un secret${NC}"; FAIL=1; }
+else
+  echo "${YEL}ℹ Gitleaks non installé (optionnel) — scan basique appliqué${NC}"
+fi
+
+if [ "$FAIL" -eq 1 ]; then
+  echo "${RED}❌ Commit bloqué — voir SECURITY.md §1${NC}"
+  echo "${YEL}   Corrige, puis recommence. (bypass d'urgence: git commit --no-verify — déconseillé)${NC}"
+  exit 1
+fi
+
+echo "${GRN}✅ Hook sécurité OK${NC}"
+exit 0
