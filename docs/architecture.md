@@ -26,7 +26,7 @@ Utilisateur (mobile)            Admin (web)
                PostgreSQL + RLS
 ```
 
-Toute la sécurité repose sur **Row Level Security** côté Postgres : même si la clé `anon` est publique (embarquée dans l'app), un utilisateur ne peut lire/écrire que ce que les *policies* autorisent. Le dashboard admin s'appuie sur le helper SQL `is_admin()`.
+Toute la sécurité repose sur **Row Level Security** côté Postgres : même si la clé `anon` est publique (embarquée dans l'app), un utilisateur ne peut lire/écrire que ce que les *policies* autorisent. Les helpers RLS (`private.is_admin()`, `private.owns_garage()`) sont dans le schéma **`private`**, non exposé par PostgREST (voir §5 Sécurité). Le dashboard admin utilise le client `service_role` (bypass RLS, server-side uniquement).
 
 ## 3. Parcours métier
 
@@ -60,14 +60,53 @@ users (conductor | garage | admin)
 
 Voir aussi la roadmap 16 semaines : [`roadmap.md`](./roadmap.md).
 
-## 5. Conventions de code
+## 5. Architecture de sécurité
+
+### Schéma `private` (hors API REST)
+
+Les fonctions helper utilisées dans les RLS policies sont dans le schéma **`private`**, non exposé par PostgREST :
+
+| Fonction | Rôle |
+|---|---|
+| `private.is_admin()` | Vérifie si `auth.uid()` est admin |
+| `private.owns_garage(uuid)` | Vérifie si `auth.uid()` possède ce garage |
+| `private.prevent_role_escalation()` | Trigger BEFORE UPDATE — bloque les changements de rôle hors admin |
+
+**Règle** : toute nouvelle fonction helper RLS va dans `private`, jamais dans `public`.
+
+### Vue `public.user_profiles`
+
+Vue `security_invoker` exposant les colonnes non sensibles :
+`id, full_name, role, city, language, avatar_url, created_at, updated_at`
+
+**Règle app** : utiliser `user_profiles` pour l'affichage d'autres utilisateurs. Ne jamais SELECT `users.phone` ou `users.email` d'un autre utilisateur depuis le client.
+
+### Storage — 2 buckets
+
+| Bucket | Visibilité | Usage |
+|---|---|---|
+| `photos` | public | Avatars, photos demandes/chat/interventions |
+| `documents` | privé | Pièces vérification garage (CNI, registre) |
+
+Convention de chemins : `photos/avatars/{uid}/`, `photos/requests/{id}/`, `photos/messages/{id}/`, `photos/interventions/{id}/`, `documents/garages/{garage_id}/`.
+
+### Clients Supabase
+
+| Client | Fichier | Clé | Usage |
+|---|---|---|---|
+| Browser | `apps/web/lib/supabase.ts` | `anon` | Client Components, pages publiques |
+| Server | `apps/web/lib/supabase-server.ts` | `service_role` | Server Components admin, bypass RLS |
+| Mobile | `apps/mobile/src/lib/supabase.ts` | `anon` | App Expo, soumis à RLS |
+
+## 6. Conventions de code
 
 - TypeScript strict partout.
 - Le client Supabase n'est **jamais** instancié en dur : toujours via `createSupabaseClient` de `@carlink/shared`.
-- Les types DB (`Profile`, `Garage`, …) sont la source de vérité côté front et doivent rester alignés avec `schema.sql`.
+- Les types DB (`User`, `Garage`, …) sont la source de vérité côté front et doivent rester alignés avec `schema.sql`.
 - Variables d'env : `EXPO_PUBLIC_*` (mobile), `NEXT_PUBLIC_*` (web client), sans préfixe = serveur uniquement.
+- `user_profiles` (vue) pour les lookups cross-user, `users` uniquement pour le profil propre.
 
-## 6. Workflow Git & déploiement
+## 7. Workflow Git & déploiement
 
 ### Branches
 
@@ -84,8 +123,8 @@ claude/backend-supabase┘                              │
 
 **Règles strictes :**
 - Claude ne pousse **jamais** directement sur `main`, `staging` ou `dev`.
-- Chaque PR vers `dev` doit passer `npm run lint` + `npm run typecheck`.
-- Si des fichiers `apps/web` sont modifiés, ajouter `npm run build:web`.
+- Chaque PR déclenche la CI complète : security audit + lint + typecheck (shared, web, mobile) + build web.
+- La CI bloque le merge si audit CVE échoue, lint échoue, ou typecheck échoue.
 - Les PRs Supabase résument les changements de schéma, RLS et risques.
 
 ### Cibles de déploiement
@@ -96,7 +135,7 @@ claude/backend-supabase┘                              │
 | DB | Supabase (SQL Editor) | manuel via `schema.sql` |
 | Mobile | EAS Build | manuel (semaine 16) |
 
-## 7. Évolutions prévues
+## 8. Évolutions prévues
 
 - Paiement CinetPay (Orange/MTN Money) → table `payments` + webhooks (semaine 11+).
 - Géo-recherche garages : passer `latitude/longitude` à PostGIS / `earthdistance` si volume.
