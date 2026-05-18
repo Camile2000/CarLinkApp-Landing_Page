@@ -28,6 +28,8 @@ jobs:
   build-web:
     name: Build Web
     runs-on: ubuntu-latest
+    # Détermine l'environment selon la branche cible de la PR
+    environment: ${{ github.base_ref == 'main' && 'production' || 'staging' }}
     # Only run when web files change
     if: |
       contains(github.event.pull_request.changed_files, 'apps/web') ||
