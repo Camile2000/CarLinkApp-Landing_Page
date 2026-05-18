@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 export const dynamic = 'force-dynamic';
 
 async function getStats() {
-  const tables = ['profiles', 'garages', 'service_requests', 'quotes', 'reviews'] as const;
+  const tables = ['users', 'garages', 'quote_requests', 'quotes', 'reviews', 'invoices'] as const;
   const entries = await Promise.all(
     tables.map(async (t) => {
       const { count } = await supabase

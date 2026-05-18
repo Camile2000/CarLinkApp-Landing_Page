@@ -21,8 +21,9 @@
 10. [Déploiement](#-déploiement)
 11. [Services externes](#-services-externes)
 12. [Roadmap MVP](#-roadmap-mvp)
-13. [Conventions & bonnes pratiques](#-conventions--bonnes-pratiques)
-14. [Dépannage](#-dépannage)
+13. [Stratégie de branches Git](#-stratégie-de-branches-git)
+14. [Conventions & bonnes pratiques](#-conventions--bonnes-pratiques)
+15. [Dépannage](#-dépannage)
 15. [Liens utiles](#-liens-utiles)
 
 ---
@@ -200,17 +201,17 @@ Le schéma crée :
 
 | Table | Rôle |
 |---|---|
-| `profiles` | Utilisateurs (extension de `auth.users`), avec rôle |
-| `vehicles` | Véhicules des conducteurs |
-| `garages` | Garages (statut : pending/approved/suspended) |
-| `garage_photos` | Photos des garages |
-| `service_requests` | Demandes de réparation des conducteurs |
-| `request_photos` | Photos jointes à une demande |
-| `quotes` | Devis envoyés par les garages |
-| `conversations` | Fil de discussion par demande |
-| `messages` | Messages chat temps réel |
-| `reviews` | Avis & notes des conducteurs |
-| `notifications` | Notifications in-app / push |
+| `users` | Utilisateurs (extension de `auth.users`) : rôle `conductor`/`garage`/`admin`, langue FR/EN |
+| `vehicles` | Véhicules des conducteurs (marque, modèle, immat, carburant…) |
+| `garages` | Garages : spécialités, certification, docs vérifiés, suspension, note |
+| `quote_requests` | Demandes de devis (type de service, urgence, photos, statut) |
+| `quotes` | Devis structurés (diagnostic, pièces, main d'œuvre, délai, garantie) |
+| `messages` | Chat temps réel attaché à une demande |
+| `reviews` | Avis vérifiés — 6 critères, modération (`approved`/`flagged`) |
+| `invoices` | Factures (montant, statut de paiement) |
+| `notifications` | Notifications in-app / Expo Push |
+
+> Schéma aligné sur la spec « Architecture du projet » du directeur technique.
 
 Sécurité : **Row Level Security activé sur toutes les tables** (chaque utilisateur ne voit que ses données ; l'admin voit tout). Détails dans [`supabase/README.md`](./supabase/README.md).
 
@@ -261,7 +262,8 @@ Depuis la racine :
 1. https://vercel.com → **Import Project** → repo GitHub.
 2. **Root Directory** : `apps/web`.
 3. Renseigne les variables `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
-4. Deploy. Chaque `git push` redéploie automatiquement.
+4. Configure la branche de production sur **`main`** (pas `dev`).
+5. Chaque push sur `main` (via PR) redéploie automatiquement.
 
 ### Mobile (EAS Build — semaine 16)
 
@@ -287,27 +289,72 @@ iOS nécessite un compte Apple Developer (99 $/an) — **uniquement à partir de
 
 ## 🗓 Roadmap MVP
 
-| Semaine | Objectif |
-|---|---|
-| 1 | Setup stack, schéma DB, auth |
-| 2–3 | Profils, véhicules, carte Google Maps |
-| 4–5 | Demandes de service + devis |
-| 6–7 | Chat temps réel (Supabase Realtime) |
-| 8 | Notifications push |
-| 9 | Avis & notes, dashboard admin |
-| 10 | Tests, polish, recette MVP |
-| 11+ | Intégration paiement (CinetPay) |
-| 14–16 | Builds stores, lancement |
+Plan détaillé semaine par semaine (16 semaines) : [`docs/roadmap.md`](./docs/roadmap.md).
+
+| Phase | Semaines | Objectif |
+|---|---|---|
+| Fondations | S1–S4 | Setup, schéma DB, auth, véhicules, recherche garages, **devis MVP** |
+| Cœur métier | S5–S8 | Devis structurés, match, suivi + chat, **système d'avis** |
+| Pilotage | S9–S10 | Bêta fermée, **dashboard admin** |
+| Paiement & traçabilité | S11–S12 | CinetPay (sandbox), factures, photos intervention |
+| Finition | S13–S15 | Bilingue FR/EN, polish UX, tests terrain, audit RLS |
+| Lancement | S16 | Google Play, soft launch — **MVP en production** |
+
+---
+
+## 🌿 Stratégie de branches Git
+
+### Structure des branches
+
+| Branche | Rôle | Protégée |
+|---|---|---|
+| `main` | Production — déploiement Vercel auto | ✅ Oui |
+| `staging` | Recette avant production | ✅ Oui |
+| `dev` | Intégration continue, branche par défaut | ✅ Oui |
+| `claude/mobile` | Développement assisté — app Expo | — |
+| `claude/web-admin` | Développement assisté — Next.js + dashboard | — |
+| `claude/backend-supabase` | Développement assisté — schéma DB, RLS, migrations | — |
+
+### Flux de travail
+
+```
+claude/mobile          ┐
+claude/web-admin       ├──► PR → dev ──► PR → staging ──► PR → main
+claude/backend-supabase┘
+```
+
+1. Claude travaille **uniquement** sur une branche `claude/…`.
+2. Chaque PR vers `dev` doit passer la checklist ci-dessous.
+3. `dev` → `staging` : validation humaine (tests terrain, QA).
+4. `staging` → `main` : décision de mise en production uniquement.
+
+### Règles absolues pour Claude
+
+> ❌ Claude ne pousse **jamais** directement sur `main`, `staging` ou `dev`.
+> ✅ Claude travaille uniquement dans une branche `claude/…` et ouvre une PR.
+
+### Checklist avant chaque PR vers `dev`
+
+```bash
+npm run lint          # obligatoire pour toutes les PRs
+npm run typecheck     # obligatoire pour toutes les PRs
+npm run build:web     # obligatoire si des fichiers web ont changé
+```
+
+Pour les changements Supabase, la PR doit inclure un résumé :
+- Tables / colonnes ajoutées ou modifiées
+- Changements RLS (nouvelles policies, suppressions)
+- Risques potentiels (données existantes, performances)
 
 ---
 
 ## 📐 Conventions & bonnes pratiques
 
-- **Branches** : `claude/*` pour le dev assisté, `main` protégée, déploiement auto via Vercel.
 - **Commits** : messages clairs et descriptifs (`feat:`, `fix:`, `chore:` …).
 - **Secrets** : jamais dans le code ni dans Git. Toujours via `.env`.
 - **TypeScript** partout (mobile, web, packages partagés).
 - **Client Supabase** : importé depuis `@carlink/shared`, jamais dupliqué.
+- **Changements petits et testables** : une PR = une fonctionnalité ou un correctif.
 - ❌ Ne pas coder iOS/Android séparément · ❌ pas de Firebase · ❌ pas d'outils superflus.
 
 ---

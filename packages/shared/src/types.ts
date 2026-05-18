@@ -1,131 +1,137 @@
 // Types TypeScript du schéma CarLink — partagés mobile ↔ web.
 // À garder synchronisés avec supabase/schema.sql.
 
-export type UserRole = 'driver' | 'garage_owner' | 'admin';
-export type GarageStatus = 'pending' | 'approved' | 'suspended' | 'rejected';
+export type UserRole = 'conductor' | 'garage' | 'admin';
+export type AppLanguage = 'fr' | 'en';
+export type RequestUrgency = 'low' | 'medium' | 'high';
 export type RequestStatus =
-  | 'open'
+  | 'pending'
   | 'quoted'
   | 'accepted'
   | 'in_progress'
   | 'completed'
-  | 'cancelled';
-export type QuoteStatus = 'pending' | 'accepted' | 'rejected' | 'expired';
-export type NotificationType =
-  | 'quote_received'
-  | 'quote_accepted'
-  | 'new_message'
-  | 'request_update'
-  | 'garage_approved'
-  | 'review_received';
+  | 'declined';
+export type PaymentStatus = 'pending' | 'paid';
 
-export interface Profile {
+export interface User {
   id: string;
-  role: UserRole;
-  full_name: string | null;
   phone: string | null;
-  avatar_url: string | null;
+  email: string | null;
+  full_name: string | null;
+  role: UserRole;
   city: string | null;
+  language: AppLanguage;
+  avatar_url: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface Vehicle {
   id: string;
-  owner_id: string;
-  make: string;
+  user_id: string;
+  brand: string;
   model: string;
   year: number | null;
   license_plate: string | null;
-  vin: string | null;
   mileage: number | null;
-  photo_url: string | null;
+  fuel_type: string | null;
+  color: string | null;
   created_at: string;
-  updated_at: string;
 }
 
 export interface Garage {
   id: string;
-  owner_id: string;
-  name: string;
-  description: string | null;
-  address: string | null;
+  user_id: string;
+  garage_name: string;
   city: string | null;
+  neighborhood: string | null;
   latitude: number | null;
   longitude: number | null;
   phone: string | null;
-  logo_url: string | null;
-  services: string[];
-  status: GarageStatus;
-  rating_avg: number;
-  rating_count: number;
+  specialties: string[];
+  rating: number;
+  review_count: number;
+  is_certified: boolean;
+  suspended: boolean;
+  documents_verified: boolean;
+  response_time_avg: number | null;
   created_at: string;
   updated_at: string;
 }
 
-export interface ServiceRequest {
+export interface QuoteRequest {
   id: string;
-  driver_id: string;
+  conductor_id: string;
+  garage_id: string | null;
   vehicle_id: string | null;
-  title: string;
+  service_type: string;
   description: string | null;
-  category: string | null;
+  images_urls: string[];
+  urgency: RequestUrgency;
   status: RequestStatus;
-  latitude: number | null;
-  longitude: number | null;
-  preferred_date: string | null;
   created_at: string;
-  updated_at: string;
+  accepted_at: string | null;
+  completed_at: string | null;
 }
 
 export interface Quote {
   id: string;
   request_id: string;
   garage_id: string;
-  amount: number;
-  currency: string;
-  estimated_duration: string | null;
-  message: string | null;
-  status: QuoteStatus;
-  valid_until: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Conversation {
-  id: string;
-  request_id: string;
-  driver_id: string;
-  garage_id: string;
+  diagnostic_price: number;
+  parts_price: number;
+  labor_price: number;
+  total_price: number;
+  estimated_days: number | null;
+  warranty: string | null;
+  notes: string | null;
   created_at: string;
 }
 
 export interface Message {
   id: string;
-  conversation_id: string;
+  request_id: string;
   sender_id: string;
-  content: string;
-  read_at: string | null;
+  recipient_id: string;
+  content: string | null;
+  images_urls: string[];
+  read: boolean;
   created_at: string;
 }
 
 export interface Review {
   id: string;
+  request_id: string;
   garage_id: string;
-  driver_id: string;
-  request_id: string | null;
+  conductor_id: string;
   rating: number;
+  quality_rating: number | null;
+  transparency_rating: number | null;
+  timing_rating: number | null;
+  communication_rating: number | null;
+  price_rating: number | null;
   comment: string | null;
+  approved: boolean;
+  flagged: boolean;
+  created_at: string;
+}
+
+export interface Invoice {
+  id: string;
+  request_id: string;
+  garage_id: string;
+  amount: number;
+  payment_status: PaymentStatus;
+  payment_date: string | null;
   created_at: string;
 }
 
 export interface AppNotification {
   id: string;
   user_id: string;
-  type: NotificationType;
   title: string;
   body: string | null;
   data: Record<string, unknown>;
-  read_at: string | null;
+  read: boolean;
   created_at: string;
 }

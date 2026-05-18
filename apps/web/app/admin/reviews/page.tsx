@@ -11,6 +11,7 @@ export default async function ReviewsAdmin() {
     const { data, error: e } = await supabase
       .from('reviews')
       .select('*')
+      .order('flagged', { ascending: false })
       .order('created_at', { ascending: false });
     if (e) throw e;
     reviews = (data as Review[]) ?? [];
@@ -33,6 +34,8 @@ export default async function ReviewsAdmin() {
             <tr>
               <th>Note</th>
               <th>Commentaire</th>
+              <th>Signalé</th>
+              <th>Approuvé</th>
               <th>Date</th>
             </tr>
           </thead>
@@ -41,12 +44,18 @@ export default async function ReviewsAdmin() {
               <tr key={r.id}>
                 <td>{'★'.repeat(r.rating)}</td>
                 <td>{r.comment ?? '—'}</td>
+                <td>{r.flagged ? '⚠️ oui' : '—'}</td>
+                <td>{r.approved ? '✓' : 'masqué'}</td>
                 <td>{new Date(r.created_at).toLocaleDateString('fr-FR')}</td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
+      <p style={{ color: 'var(--muted)', marginTop: 24, fontSize: 14 }}>
+        Note : rejeter un avis met <code>reviews.approved = false</code> (il
+        disparaît de la page publique et la note du garage est recalculée).
+      </p>
     </main>
   );
 }
