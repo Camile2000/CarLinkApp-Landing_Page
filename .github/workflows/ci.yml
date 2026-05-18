@@ -28,13 +28,15 @@ jobs:
   build-web:
     name: Build Web
     runs-on: ubuntu-latest
+    # Détermine l'environment selon la branche cible de la PR
+    environment: ${{ github.base_ref == 'main' && 'production' || 'staging' }}
     # Only run when web files change
     if: |
       contains(github.event.pull_request.changed_files, 'apps/web') ||
       contains(github.event.pull_request.changed_files, 'packages/shared')
     env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder' }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
     steps:
       - uses: actions/checkout@v4
 
