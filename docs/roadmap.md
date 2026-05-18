@@ -33,6 +33,19 @@
 
 _**[L]** = livrable de fin de semaine._
 
+## Branches de développement par phase
+
+| Phase | Semaines | Branches actives |
+|---|---|---|
+| Fondations | S1–S4 | `claude/backend-supabase`, `claude/mobile` |
+| Cœur métier | S5–S8 | `claude/mobile`, `claude/backend-supabase` |
+| Pilotage | S9–S10 | `claude/web-admin`, `claude/mobile` |
+| Paiement & traçabilité | S11–S12 | `claude/backend-supabase`, `claude/mobile` |
+| Finition | S13–S15 | `claude/mobile`, `claude/web-admin` |
+| Lancement | S16 | toutes → `staging` → `main` |
+
+Chaque livrable de fin de semaine **[L]** donne lieu à une PR `claude/…` → `dev`, validée après `lint` + `typecheck` (+ `build:web` si web).
+
 ## Résumé exécutif
 
 | Élément | Détail |

@@ -67,11 +67,32 @@ Voir aussi la roadmap 16 semaines : [`roadmap.md`](./roadmap.md).
 - Les types DB (`Profile`, `Garage`, …) sont la source de vérité côté front et doivent rester alignés avec `schema.sql`.
 - Variables d'env : `EXPO_PUBLIC_*` (mobile), `NEXT_PUBLIC_*` (web client), sans préfixe = serveur uniquement.
 
-## 6. Déploiement
+## 6. Workflow Git & déploiement
+
+### Branches
+
+```
+claude/mobile          ┐
+claude/web-admin       ├──► PR (lint+typecheck) ──► dev
+claude/backend-supabase┘                              │
+                                                      ▼
+                                                  staging  (QA humaine)
+                                                      │
+                                                      ▼
+                                                   main  ──► Vercel (prod)
+```
+
+**Règles strictes :**
+- Claude ne pousse **jamais** directement sur `main`, `staging` ou `dev`.
+- Chaque PR vers `dev` doit passer `npm run lint` + `npm run typecheck`.
+- Si des fichiers `apps/web` sont modifiés, ajouter `npm run build:web`.
+- Les PRs Supabase résument les changements de schéma, RLS et risques.
+
+### Cibles de déploiement
 
 | Cible | Outil | Déclencheur |
 |---|---|---|
-| Web + admin | Vercel (root `apps/web`) | `git push` |
+| Web + admin | Vercel (root `apps/web`) | PR mergée sur `main` |
 | DB | Supabase (SQL Editor) | manuel via `schema.sql` |
 | Mobile | EAS Build | manuel (semaine 16) |
 
