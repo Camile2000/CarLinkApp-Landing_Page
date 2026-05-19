@@ -24,7 +24,7 @@ Si une demande entre en conflit avec `SECURITY.md`, **alerte le client avant d'a
 
 ## Stack & architecture
 
-- Monorepo npm workspaces : `apps/mobile` (Expo), `apps/web` (Next.js), `packages/shared`.
+- Monorepo npm workspaces : `apps/mobile` (Expo), `apps/web-admin` (Next.js), `packages/shared`.
 - Backend : Supabase (Postgres + Auth + Realtime + Storage), sécurité par RLS.
 - Détails : [`docs/architecture.md`](./docs/architecture.md).
 
@@ -68,7 +68,7 @@ Si une demande entre en conflit avec `SECURITY.md`, **alerte le client avant d'a
 
 ### CI / GitHub
 
-- **CODEOWNERS respecté** — `/supabase/`, `/packages/shared/`, `/apps/web/app/admin/`, `/.github/` exigent review explicite.
+- **CODEOWNERS respecté** — `/supabase/`, `/packages/shared/`, `/apps/web-admin/app/admin/`, `/.github/` exigent review explicite.
 - **Dependabot** — ne jamais accepter de major bump sans vérifier les breaking changes manuellement.
 - **Pas de shell injection dans les workflows** — variables `${{ github.* }}` toujours passées via `env:` avant utilisation dans `run:`.
 

@@ -33,7 +33,7 @@ jobs:
         with:
           filters: |
             web:
-              - 'apps/web/**'
+              - 'apps/web-admin/**'
               - 'packages/shared/**'
             mobile:
               - 'apps/mobile/**'
@@ -162,7 +162,7 @@ jobs:
         run: npm run typecheck --workspace packages/shared
 
       - name: Typecheck — web
-        run: npm run typecheck --workspace apps/web
+        run: npm run typecheck --workspace apps/web-admin
 
       - name: Typecheck — mobile
         run: npm run typecheck --workspace apps/mobile
@@ -180,7 +180,7 @@ jobs:
 
   # ─────────────────────────────────────────────────────────────
   # 4. BUILD WEB
-  #    - Déclenché seulement si apps/web ou packages/shared changent
+  #    - Déclenché seulement si apps/web-admin ou packages/shared changent
   #    - Attend lint-typecheck ET security (pas de build si audit échoue)
   #    - Utilise l'environment GitHub (staging/production) pour les secrets
   # ─────────────────────────────────────────────────────────────
@@ -217,7 +217,7 @@ jobs:
           echo "## 🏗 Web Build" >> "$GITHUB_STEP_SUMMARY"
           echo "- **Status**: ✅ Succès" >> "$GITHUB_STEP_SUMMARY"
           echo "- **Environment**: \`$DEPLOY_ENV\`" >> "$GITHUB_STEP_SUMMARY"
-          if [ -d "apps/web/.next" ]; then
-            SIZE=$(du -sh apps/web/.next | cut -f1)
+          if [ -d "apps/web-admin/.next" ]; then
+            SIZE=$(du -sh apps/web-admin/.next | cut -f1)
             echo "- **Bundle size (.next)**: $SIZE" >> "$GITHUB_STEP_SUMMARY"
           fi

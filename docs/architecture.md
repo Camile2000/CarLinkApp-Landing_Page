@@ -7,7 +7,7 @@ Ce document détaille comment les briques se connectent. Vue produit dans le [RE
 Un seul code base TypeScript, un seul backend (Supabase), deux frontends :
 
 - **`apps/mobile`** — Expo / React Native / expo-router. Utilisé par les conducteurs et garagistes (iOS, Android, et web Expo).
-- **`apps/web`** — Next.js (App Router). Site marketing + dashboard admin.
+- **`apps/web-admin`** — Next.js (App Router). Site marketing + dashboard admin.
 - **`packages/shared`** — types DB + factory client Supabase, consommé par les deux apps via le workspace npm `@carlink/shared`.
 
 ## 2. Flux de données
@@ -31,7 +31,7 @@ Toute la sécurité repose sur **Row Level Security** côté Postgres : même si
 ## 3. Parcours métier
 
 1. **Inscription** → trigger `handle_new_user` crée automatiquement une ligne `users` (rôle `conductor` par défaut, ou `garage` via metadata, langue FR/EN).
-2. **Garage** → un `garage` crée son `garages`. L'admin le **certifie** / vérifie les docs depuis `apps/web/app/admin/garages` ; il peut le **suspendre**.
+2. **Garage** → un `garage` crée son `garages`. L'admin le **certifie** / vérifie les docs depuis `apps/web-admin/app/admin/garages` ; il peut le **suspendre**.
 3. **Demande** → un `conductor` crée un `quote_requests` (`pending`) avec type de service, urgence et photos. Visible des garages non suspendus (policy RLS).
 4. **Devis** → un garage crée un `quotes` structuré (diagnostic + pièces + main d'œuvre + délai) ; le trigger `mark_request_quoted` passe la demande en `quoted`.
 5. **Match** → le conducteur compare et accepte ; `quote_requests.status` → `accepted` (`accepted_at`).
@@ -94,8 +94,8 @@ Convention de chemins : `photos/avatars/{uid}/`, `photos/requests/{id}/`, `photo
 
 | Client | Fichier | Clé | Usage |
 |---|---|---|---|
-| Browser | `apps/web/lib/supabase.ts` | `anon` | Client Components, pages publiques |
-| Server | `apps/web/lib/supabase-server.ts` | `service_role` | Server Components admin, bypass RLS |
+| Browser | `apps/web-admin/lib/supabase.ts` | `anon` | Client Components, pages publiques |
+| Server | `apps/web-admin/lib/supabase-server.ts` | `service_role` | Server Components admin, bypass RLS |
 | Mobile | `apps/mobile/src/lib/supabase.ts` | `anon` | App Expo, soumis à RLS |
 
 ## 6. Conventions de code
@@ -131,7 +131,7 @@ claude/backend-supabase┘                              │
 
 | Cible | Outil | Déclencheur |
 |---|---|---|
-| Web + admin | Vercel (root `apps/web`) | PR mergée sur `main` |
+| Web + admin | Vercel (root `apps/web-admin`) | PR mergée sur `main` |
 | DB | Supabase (SQL Editor) | manuel via `schema.sql` |
 | Mobile | EAS Build | manuel (semaine 16) |
 

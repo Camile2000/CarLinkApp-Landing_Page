@@ -16,7 +16,7 @@
 
 # ── Dashboard admin ─────────────────────────────────────────────────────────
 # Zone à droits élevés — toute faille expose la modération et les données.
-/apps/web/app/admin/               @camile2000
+/apps/web-admin/app/admin/               @camile2000
 
 # ── CI/CD & workflows GitHub ────────────────────────────────────────────────
 # Contrôle l'ensemble du pipeline de sécurité du projet.

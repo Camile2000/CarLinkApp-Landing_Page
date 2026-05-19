@@ -68,7 +68,7 @@ CarLink est une marketplace de services automobiles. Cible MVP : **15 garages + 
         │                      │
 ┌───────▼────────────┐  ┌──────┴───────────┐
 │  Dashboard admin   │  │   Site web       │
-│  Next.js           │  │   Next.js        │  apps/web
+│  Next.js           │  │   Next.js        │  apps/web-admin
 │  (modération)      │  │   (marketing)    │
 └───────┬────────────┘  └──────────────────┘
         │
@@ -159,7 +159,7 @@ npm install
 # 3. Copier les modèles d'environnement
 cp .env.example .env
 cp apps/mobile/.env.example apps/mobile/.env
-cp apps/web/.env.example apps/web/.env.local
+cp apps/web-admin/.env.example apps/web-admin/.env.local
 ```
 
 > `npm install` à la racine installe les dépendances de **tous** les workspaces (`apps/*`, `packages/*`).
@@ -178,7 +178,7 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=          # semaine 3
 ```
 
-### `apps/web/.env.local`
+### `apps/web-admin/.env.local`
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxxx.supabase.co
@@ -234,7 +234,7 @@ Scanne le QR code avec **Expo Go**. L'app se recharge à chaque sauvegarde.
 ```bash
 npm run web
 # ou
-cd apps/web && npm run dev
+cd apps/web-admin && npm run dev
 ```
 
 Ouvre http://localhost:3000 (marketing) et http://localhost:3000/admin (dashboard).
@@ -260,7 +260,7 @@ Depuis la racine :
 ### Web (Vercel)
 
 1. https://vercel.com → **Import Project** → repo GitHub.
-2. **Root Directory** : `apps/web`.
+2. **Root Directory** : `apps/web-admin`.
 3. Renseigne les variables `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
 4. Configure la branche de production sur **`main`** (pas `dev`).
 5. Chaque push sur `main` (via PR) redéploie automatiquement.
