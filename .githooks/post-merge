@@ -1,0 +1,25 @@
+#!/bin/sh
+# =============================================================
+# Hook post-merge CarLink
+# Regénère package-lock.json si package.json ou le lockfile
+# ont changé lors du merge — évite les lockfile corrompus en CI
+# =============================================================
+
+YEL='\033[1;33m'; GRN='\033[0;32m'; NC='\033[0m'
+
+# Vérifie si package.json ou package-lock.json ont changé
+CHANGED=$(git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD 2>/dev/null \
+  | grep -E "^(package\.json|package-lock\.json|apps/.*/package\.json|packages/.*/package\.json)")
+
+if [ -n "$CHANGED" ]; then
+  echo "${YEL}📦 Dépendances modifiées lors du merge — regénération du lockfile…${NC}"
+  echo "$CHANGED"
+  npm install --silent
+  if [ $? -eq 0 ]; then
+    echo "${GRN}✅ package-lock.json regénéré${NC}"
+    # Stage le nouveau lockfile automatiquement si on est dans un merge commit
+    git add package-lock.json 2>/dev/null || true
+  else
+    echo "⚠️  npm install a échoué — vérifier manuellement"
+  fi
+fi
