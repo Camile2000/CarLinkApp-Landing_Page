@@ -109,3 +109,4 @@ Avant de merger toute PR, vérifier :
 |------|-----------|--------|--------|
 | 2026-05-18 | Clé anon + URL Supabase réelles dans `apps/mobile/.env.example` (PR#7) | Remplacées par placeholders (commit `74ed6b9`) | ✅ Corrigé — clé à régénérer côté Supabase |
 | 2026-05-18 | Mise en place P0 (SECURITY.md, hook, CodeQL, Dependabot, Gitleaks, Semgrep) | — | ✅ Fait |
+| 2026-05-19 | Optimisation RLS : correction `auth_rls_initplan` (auth.uid/is_admin/owns_garage sans sous-select) + fusion `multiple_permissive_policies` sur 8 tables | Migration `20260519000000_optimize_rls_policies.sql` créée, aucun élargissement d'accès | ✅ Fait |
