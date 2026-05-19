@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function NotFound() {
   return (
     <main className="container">
@@ -6,7 +8,7 @@ export default function NotFound() {
         Page introuvable.
       </p>
       <p style={{ marginTop: 32 }}>
-        <a href="/">← Retour à l&apos;accueil</a>
+        <Link href="/">← Retour à l&apos;accueil</Link>
       </p>
     </main>
   );
