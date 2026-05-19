@@ -1,22 +1,29 @@
-// Types TypeScript du schéma CarLink — partagés mobile ↔ web.
-// À garder synchronisés avec supabase/schema.sql.
+// Types générés du schéma Supabase — partagés mobile ↔ web.
+// À maintenir en sync avec supabase/schema.sql et supabase/migrations/
 
 export type UserRole = 'conductor' | 'garage' | 'admin';
 export type AppLanguage = 'fr' | 'en';
 export type RequestUrgency = 'low' | 'medium' | 'high';
-export type RequestStatus =
-  | 'pending'
-  | 'quoted'
-  | 'accepted'
-  | 'in_progress'
-  | 'completed'
-  | 'declined';
+export type RequestStatus = 'pending' | 'quoted' | 'accepted' | 'in_progress' | 'completed' | 'declined';
 export type PaymentStatus = 'pending' | 'paid';
 
+// ---- public.users (table réelle, accès restreint) ----
 export interface User {
   id: string;
   phone: string | null;
   email: string | null;
+  full_name: string | null;
+  role: UserRole;
+  city: string | null;
+  language: AppLanguage;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ---- public.user_profiles (vue sécurisée, colonnes non-sensibles) ----
+export interface UserProfile {
+  id: string;
   full_name: string | null;
   role: UserRole;
   city: string | null;
@@ -134,4 +141,79 @@ export interface AppNotification {
   data: Record<string, unknown>;
   read: boolean;
   created_at: string;
+}
+
+// ---- Aggregated Database type pour supabase-js client ----
+export interface Database {
+  public: {
+    Tables: {
+      users: {
+        Row: User;
+        Insert: Omit<User, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      vehicles: {
+        Row: Vehicle;
+        Insert: Omit<Vehicle, 'id' | 'created_at'>;
+        Update: Partial<Omit<Vehicle, 'id' | 'created_at' | 'user_id'>>;
+      };
+      garages: {
+        Row: Garage;
+        Insert: Omit<Garage, 'id' | 'created_at' | 'updated_at' | 'rating' | 'review_count'>;
+        Update: Partial<Omit<Garage, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'rating' | 'review_count'>>;
+      };
+      quote_requests: {
+        Row: QuoteRequest;
+        Insert: Omit<QuoteRequest, 'id' | 'created_at' | 'accepted_at' | 'completed_at'>;
+        Update: Partial<Omit<QuoteRequest, 'id' | 'created_at' | 'conductor_id'>>;
+      };
+      quotes: {
+        Row: Quote;
+        Insert: Omit<Quote, 'id' | 'created_at'>;
+        Update: Partial<Omit<Quote, 'id' | 'created_at' | 'request_id' | 'garage_id'>>;
+      };
+      messages: {
+        Row: Message;
+        Insert: Omit<Message, 'id' | 'created_at' | 'read'>;
+        Update: Partial<Omit<Message, 'id' | 'created_at' | 'request_id' | 'sender_id' | 'recipient_id'>>;
+      };
+      reviews: {
+        Row: Review;
+        Insert: Omit<Review, 'id' | 'created_at' | 'approved' | 'flagged'>;
+        Update: Partial<Omit<Review, 'id' | 'created_at' | 'request_id' | 'garage_id' | 'conductor_id'>>;
+      };
+      invoices: {
+        Row: Invoice;
+        Insert: Omit<Invoice, 'id' | 'created_at' | 'payment_date'>;
+        Update: Partial<Omit<Invoice, 'id' | 'created_at' | 'request_id' | 'garage_id'>>;
+      };
+      notifications: {
+        Row: AppNotification;
+        Insert: Omit<AppNotification, 'id' | 'created_at' | 'read'>;
+        Update: Partial<Omit<AppNotification, 'id' | 'created_at' | 'user_id'>>;
+      };
+    };
+    Views: {
+      user_profiles: {
+        Row: UserProfile;
+      };
+    };
+    Functions: {
+      is_admin: {
+        Args: unknown;
+        Returns: boolean;
+      };
+      owns_garage: {
+        Args: { g: string };
+        Returns: boolean;
+      };
+    };
+    Enums: {
+      user_role: UserRole;
+      app_language: AppLanguage;
+      request_urgency: RequestUrgency;
+      request_status: RequestStatus;
+      payment_status: PaymentStatus;
+    };
+  };
 }

@@ -5,7 +5,7 @@ const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
   // Bloque l'embedding dans des iframes d'autres origines (anti-clickjacking)
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-  // Empêche le MIME-sniffing (XSS via upload)
+  // Empêche le MIME-sniffing (XSS via option)
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   // Limite les informations transmises dans le Referer
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
