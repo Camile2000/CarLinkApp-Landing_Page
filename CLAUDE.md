@@ -34,6 +34,7 @@ Si une demande entre en conflit avec `SECURITY.md`, **alerte le client avant d'a
 
 - Branches actives : `claude/mobile` · `claude/web-admin` · `claude/backend-supabase` → PR → `dev` → `staging` → `main`.
 - **Jamais de push direct sur `main`, `staging`, `dev`.**
+- **Jamais créer de branche sans demande directe explicite.**
 - Toute PR déclenche la CI complète (security + lint + typecheck + build).
 - Une PR = un objectif précis. Pas de PR qui mélange mobile + web + RLS + storage.
 - Toute PR doit répondre aux 7 questions du template (voir [`docs/gouvernance.md`](./docs/gouvernance.md)).
