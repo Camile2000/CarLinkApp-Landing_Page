@@ -169,10 +169,13 @@ jobs:
 
       - name: Lint & type summary
         if: always()
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
           echo "## 🧹 Lint & Typecheck" >> "$GITHUB_STEP_SUMMARY"
           echo "- Node: $(node --version)" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Branch: \`${{ github.head_ref }}\` → \`${{ github.base_ref }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Branch: \`$HEAD_REF\` → \`$BASE_REF\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Workspaces: shared · web · mobile" >> "$GITHUB_STEP_SUMMARY"
 
   # ─────────────────────────────────────────────────────────────
@@ -208,10 +211,12 @@ jobs:
 
       - name: Build report
         if: success()
+        env:
+          DEPLOY_ENV: ${{ github.base_ref == 'main' && 'production' || 'staging' }}
         run: |
           echo "## 🏗 Web Build" >> "$GITHUB_STEP_SUMMARY"
           echo "- **Status**: ✅ Succès" >> "$GITHUB_STEP_SUMMARY"
-          echo "- **Environment**: \`${{ github.base_ref == 'main' && 'production' || 'staging' }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Environment**: \`$DEPLOY_ENV\`" >> "$GITHUB_STEP_SUMMARY"
           if [ -d "apps/web/.next" ]; then
             SIZE=$(du -sh apps/web/.next | cut -f1)
             echo "- **Bundle size (.next)**: $SIZE" >> "$GITHUB_STEP_SUMMARY"
