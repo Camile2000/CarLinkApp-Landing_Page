@@ -1,0 +1,27 @@
+version: 2
+updates:
+  # Dépendances npm — racine du monorepo (workspaces inclus)
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      # Regroupe les patchs/mineurs pour limiter le bruit de PR
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    labels:
+      - dependencies
+      - security
+
+  # Actions GitHub (pin des versions d'actions)
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - ci
+      - security

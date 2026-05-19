@@ -1,9 +1,10 @@
-import { supabase } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 import type { Review } from '@carlink/shared';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ReviewsAdmin() {
+  const supabase = createServerSupabaseClient();
   let reviews: Review[] = [];
   let error: string | null = null;
 
