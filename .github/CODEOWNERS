@@ -1,0 +1,30 @@
+# CODEOWNERS — CarLink
+# Définit qui doit reviewer les changements sur les chemins sensibles.
+# La syntaxe est identique à .gitignore mais avec des propriétaires GitHub.
+# Format : <chemin>  <@user ou @org/team>
+#
+# Note : remplacer @camile2000 par les vrais handles GitHub des reviewers.
+# Pour les équipes : @carlink/backend-team, @carlink/security-team, etc.
+
+# ── Supabase : migrations, RLS, schéma ─────────────────────────────────────
+# Le chemin le plus sensible du projet. Toute migration touche la production.
+/supabase/                          @camile2000
+
+# ── Shared package : types + validators ────────────────────────────────────
+# Tout changement ici casse simultanément mobile et web — review obligatoire.
+/packages/shared/                   @camile2000
+
+# ── Dashboard admin ─────────────────────────────────────────────────────────
+# Zone à droits élevés — toute faille expose la modération et les données.
+/apps/web/app/admin/               @camile2000
+
+# ── CI/CD & workflows GitHub ────────────────────────────────────────────────
+# Contrôle l'ensemble du pipeline de sécurité du projet.
+/.github/                           @camile2000
+
+# ── SECURITY.md ─────────────────────────────────────────────────────────────
+# Source de vérité sécurité — ne doit pas être modifié sans validation.
+/SECURITY.md                        @camile2000
+
+# ── Gouvernance ─────────────────────────────────────────────────────────────
+/docs/gouvernance.md               @camile2000
