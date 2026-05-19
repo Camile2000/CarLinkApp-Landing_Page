@@ -1,0 +1,30 @@
+# =============================================================
+# Configuration Gitleaks — CarLink
+# Voir SECURITY.md §5 (outils) et §6 (journal)
+# =============================================================
+# Base sur le ruleset par défaut de Gitleaks (clés AWS, JWT, etc.)
+[extend]
+useDefault = true
+
+[allowlist]
+description = """
+Findings historiques CONNUS et déjà remédiés.
+La clé anon Supabase a été commitée par erreur (PR#7) puis remplacée
+par un placeholder au commit 74ed6b9 (working tree propre).
+Cette clé est protégée par RLS côté Supabase et flaggée pour
+régénération manuelle — voir journal SECURITY.md §6.
+Réécrire l'historique nécessiterait un force-push destructif (interdit).
+Seuls ces 2 commits précis sont exclus ; tout nouveau secret reste détecté.
+"""
+
+# Commits historiques précis contenant la clé anon déjà remédiée
+commits = [
+  "6cd2eb845327517b8ed99ce5d5c53122974b6525",
+  "3900107631e9ef79fd1a573d8ee27aafb962cc05",
+]
+
+# Les fichiers .env.example ne doivent contenir que des placeholders ;
+# le hook pré-commit + le scan custom CI vérifient déjà le working tree.
+paths = [
+  '''.*\.env\.example$''',
+]

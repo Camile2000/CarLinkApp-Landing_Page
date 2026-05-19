@@ -4,30 +4,127 @@ on:
   pull_request:
     branches: [dev, staging, main]
 
+# Annule les runs obsolètes sur la même branche — évite les files d'attente
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Permissions minimales globales — chaque job opt-in si besoin de plus
+permissions:
+  contents: read
+
 jobs:
+  # ─────────────────────────────────────────────────────────────
+  # 1. DÉTECTION DES CHANGEMENTS
+  #    Base de tous les jobs conditionnels — évite les builds inutiles
+  # ─────────────────────────────────────────────────────────────
   changes:
     name: Detect Changes
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     outputs:
-      web: ${{ steps.filter.outputs.web }}
+      web:    ${{ steps.filter.outputs.web }}
+      mobile: ${{ steps.filter.outputs.mobile }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
             web:
               - 'apps/web/**'
               - 'packages/shared/**'
+            mobile:
+              - 'apps/mobile/**'
+              - 'packages/shared/**'
 
+  # ─────────────────────────────────────────────────────────────
+  # 2. AUDIT DE SÉCURITÉ
+  #    - CVE dans les dépendances (npm audit)
+  #    - Détection de secrets dans le code source
+  #    Tourne en parallèle de lint-typecheck (pas de dépendance)
+  # ─────────────────────────────────────────────────────────────
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # historique complet pour scan diff
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+
+      # --ignore-scripts : empêche l'exécution de scripts postinstall malveillants
+      - name: Install (no lifecycle scripts)
+        run: npm ci --ignore-scripts
+
+      # Bloque sur HIGH et CRITICAL — ignore les vulns de devDependencies en prod
+      - name: Audit CVE (high+critical)
+        run: npm audit --audit-level=high --omit=dev
+
+      # Scan de patterns de secrets dans les fichiers TypeScript/JS trackés
+      - name: Scan for hardcoded secrets
+        run: |
+          SECRETS_FOUND=0
+          # Clés JWT Supabase (anon ou service_role) — longueur > 100 chars, commencent par eyJ
+          if grep -rn --include="*.ts" --include="*.tsx" --include="*.js" \
+            "eyJ[A-Za-z0-9_-]\{100,\}" \
+            apps/ packages/ 2>/dev/null | grep -v "node_modules" | grep -v ".next"; then
+            echo "::error::JWT potentiel trouvé dans le code source"
+            SECRETS_FOUND=1
+          fi
+          # URLs Supabase réelles (hors fichiers .example)
+          if grep -rn --include="*.ts" --include="*.tsx" --include="*.js" \
+            "supabase\.co" \
+            apps/ packages/ 2>/dev/null | grep -v "node_modules" | grep -v ".next"; then
+            echo "::warning::URL Supabase dans le code source — vérifier que c'est un placeholder"
+          fi
+          if [ "$SECRETS_FOUND" -eq 1 ]; then exit 1; fi
+          echo "✅ Aucun secret détecté dans le code source"
+
+      # Scan secrets exhaustif sur tout l'historique (gratuit, OSS)
+      - name: Gitleaks (secret scan)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # SAST — règles OSS (injection, XSS, secrets, mauvaises pratiques)
+      - name: Semgrep (SAST)
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: >-
+            p/default
+            p/typescript
+            p/react
+            p/secrets
+
+      - name: Security summary
+        if: always()
+        run: |
+          echo "## 🔒 Security Audit" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Dependency audit: \`npm audit --audit-level=high --omit=dev\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Secret scan: JWT/Supabase patterns + Gitleaks (historique complet)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- SAST: Semgrep (default · typescript · react · secrets)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- CodeQL: workflow dédié (\`codeql.yml\`)" >> "$GITHUB_STEP_SUMMARY"
+
+  # ─────────────────────────────────────────────────────────────
+  # 3. LINT & TYPECHECK
+  #    - ESLint sur tous les workspaces (--if-present)
+  #    - TypeScript strict sur web + mobile + shared
+  # ─────────────────────────────────────────────────────────────
   lint-typecheck:
     name: Lint & Typecheck
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
@@ -35,26 +132,47 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
+      - name: Lint (web — next lint)
         run: npm run lint
 
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Typecheck — shared
+        run: npm run typecheck --workspace packages/shared
 
+      - name: Typecheck — web
+        run: npm run typecheck --workspace apps/web
+
+      - name: Typecheck — mobile
+        run: npm run typecheck --workspace apps/mobile
+
+      - name: Lint & type summary
+        if: always()
+        run: |
+          echo "## 🧹 Lint & Typecheck" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Node: $(node --version)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Branch: \`${{ github.head_ref }}\` → \`${{ github.base_ref }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Workspaces: shared · web · mobile" >> "$GITHUB_STEP_SUMMARY"
+
+  # ─────────────────────────────────────────────────────────────
+  # 4. BUILD WEB
+  #    - Déclenché seulement si apps/web ou packages/shared changent
+  #    - Attend lint-typecheck ET security (pas de build si audit échoue)
+  #    - Utilise l'environment GitHub (staging/production) pour les secrets
+  # ─────────────────────────────────────────────────────────────
   build-web:
     name: Build Web
     runs-on: ubuntu-latest
-    needs: changes
+    needs: [changes, lint-typecheck, security]
     if: needs.changes.outputs.web == 'true'
-    # Détermine l'environment selon la branche cible de la PR
+    timeout-minutes: 20
     environment: ${{ github.base_ref == 'main' && 'production' || 'staging' }}
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder_anon_key_ci' }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'placeholder_service_role_ci' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
@@ -62,5 +180,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build web
+      - name: Build web (Next.js production)
         run: npm run build:web
+
+      - name: Build report
+        if: success()
+        run: |
+          echo "## 🏗 Web Build" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Status**: ✅ Succès" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Environment**: \`${{ github.base_ref == 'main' && 'production' || 'staging' }}\`" >> "$GITHUB_STEP_SUMMARY"
+          if [ -d "apps/web/.next" ]; then
+            SIZE=$(du -sh apps/web/.next | cut -f1)
+            echo "- **Bundle size (.next)**: $SIZE" >> "$GITHUB_STEP_SUMMARY"
+          fi
