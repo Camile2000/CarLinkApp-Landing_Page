@@ -14,14 +14,14 @@ import { supabase } from '../../src/lib/supabase';
 import { LoginSchema } from '@carlink/shared';
 
 export default function LoginScreen() {
-  const [phone, setPhone] = useState('+225');
+  const [email, setEmail] = useState('');
   const [role, setRole] = useState<'conductor' | 'garage'>('conductor');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleSendOtp() {
     setError('');
-    const result = LoginSchema.safeParse({ phone });
+    const result = LoginSchema.safeParse({ email });
     if (!result.success) {
       setError(result.error.issues[0].message);
       return;
@@ -30,16 +30,16 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const { error: authError } = await supabase.auth.signInWithOtp({
-        phone: result.data.phone,
+        email: result.data.email,
         options: {
           data: { role },
-          channel: 'sms',
+          emailRedirectTo: 'carlink://',
         },
       });
       if (authError) throw authError;
-      router.push({ pathname: '/(auth)/verify', params: { phone: result.data.phone } });
+      router.push({ pathname: '/(auth)/verify', params: { email: result.data.email } });
     } catch (e: unknown) {
-      setError((e as Error).message ?? 'Erreur lors de l\'envoi du SMS');
+      setError((e as Error).message ?? 'Erreur lors de l\'envoi du code');
     } finally {
       setLoading(false);
     }
@@ -54,14 +54,14 @@ export default function LoginScreen() {
         <Text style={styles.logo}>CarLink</Text>
         <Text style={styles.tagline}>Conducteurs ⇄ Garages</Text>
 
-        <Text style={styles.label}>Numéro de téléphone</Text>
+        <Text style={styles.label}>Adresse email</Text>
         <TextInput
           style={styles.input}
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-          autoComplete="tel"
-          placeholder="+22507XXXXXXXX"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoComplete="email"
+          placeholder="nom@exemple.com"
           placeholderTextColor="#4A6585"
           returnKeyType="done"
         />
@@ -95,7 +95,7 @@ export default function LoginScreen() {
         >
           {loading
             ? <ActivityIndicator color="#0B1F3A" />
-            : <Text style={styles.btnText}>Recevoir le code SMS</Text>}
+            : <Text style={styles.btnText}>Recevoir le code</Text>}
         </Pressable>
 
         <Text style={styles.disclaimer}>

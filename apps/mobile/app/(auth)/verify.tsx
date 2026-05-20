@@ -17,7 +17,7 @@ const OTP_LENGTH = 6;
 const RESEND_DELAY = 60;
 
 export default function VerifyScreen() {
-  const { phone } = useLocalSearchParams<{ phone: string }>();
+  const { email } = useLocalSearchParams<{ email: string }>();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,7 +38,7 @@ export default function VerifyScreen() {
     if (token.length < OTP_LENGTH) return;
     setError('');
 
-    const result = OtpSchema.safeParse({ phone, token });
+    const result = OtpSchema.safeParse({ email, token });
     if (!result.success) {
       setError(result.error.issues[0].message);
       return;
@@ -47,9 +47,9 @@ export default function VerifyScreen() {
     setLoading(true);
     try {
       const { error: authError } = await supabase.auth.verifyOtp({
-        phone: result.data.phone,
+        email: result.data.email,
         token: result.data.token,
-        type: 'sms',
+        type: 'email',
       });
       if (authError) throw authError;
       // AuthContext détectera la session → index.tsx redirigera
@@ -66,8 +66,8 @@ export default function VerifyScreen() {
     if (countdown > 0) return;
     setError('');
     const { error: authError } = await supabase.auth.signInWithOtp({
-      phone,
-      options: { channel: 'sms' },
+      email,
+      options: { emailRedirectTo: 'carlink://' },
     });
     if (authError) setError(authError.message);
     else setCountdown(RESEND_DELAY);
@@ -79,7 +79,7 @@ export default function VerifyScreen() {
     if (digits.length === OTP_LENGTH) handleVerify(digits);
   }
 
-  const maskedPhone = phone ? `${phone.slice(0, 5)}****${phone.slice(-3)}` : '';
+  const maskedEmail = email ? `${email.slice(0, 3)}****${email.slice(email.lastIndexOf('@'))}` : '';
 
   return (
     <KeyboardAvoidingView
@@ -89,7 +89,7 @@ export default function VerifyScreen() {
       <View style={styles.inner}>
         <Text style={styles.title}>Code de vérification</Text>
         <Text style={styles.subtitle}>
-          Entrez le code à 6 chiffres reçu par SMS au {maskedPhone}
+          Entrez le code à 6 chiffres reçu par email à {maskedEmail}
         </Text>
 
         <TextInput

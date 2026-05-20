@@ -4,14 +4,15 @@ import { z } from 'zod';
 const phoneRegex = /^\+[1-9][0-9]{8,14}$/;
 
 export const LoginSchema = z.object({
-  phone: z
+  email: z
     .string()
     .trim()
-    .regex(phoneRegex, 'Format invalide. Ex: +22507XXXXXXXX'),
+    .toLowerCase()
+    .email('Adresse email invalide'),
 });
 
 export const OtpSchema = z.object({
-  phone: z.string().trim().regex(phoneRegex, 'Téléphone invalide'),
+  email: z.string().trim().toLowerCase().email('Email invalide'),
   token: z.string().length(6, 'Le code doit comporter 6 chiffres').regex(/^[0-9]+$/, 'Chiffres uniquement'),
 });
 
