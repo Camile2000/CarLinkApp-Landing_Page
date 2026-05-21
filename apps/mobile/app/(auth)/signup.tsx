@@ -37,7 +37,7 @@ export default function SignUpScreen() {
       setLoading(true);
 
       const { error } = await supabase.auth.signUp({
-        email: validatedData.email,
+        email: validatedData.email as string,
         password: validatedData.password,
         options: {
           data: {
@@ -57,8 +57,8 @@ export default function SignUpScreen() {
         return;
       }
 
-      // @ts-expect-error Expo Router doesn't recognize dynamic route groups
       router.push({
+        // @ts-expect-error Expo Router doesn't recognize dynamic route groups
         pathname: '/(auth)/otp' as const,
         params: { email: email || '', type: 'signup' },
       });
