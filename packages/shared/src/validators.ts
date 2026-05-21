@@ -23,6 +23,37 @@ export const signUpSchema = z.object({
   language: z.enum(['fr', 'en']).default('fr'),
 });
 
+export const passwordSchema = z
+  .string()
+  .min(8, 'Minimum 8 caractères')
+  .max(128, 'Maximum 128 caractères')
+  .regex(/[A-Z]/, 'Doit contenir au moins une majuscule')
+  .regex(/[0-9]/, 'Doit contenir au moins un chiffre');
+
+export const signUpWithPasswordSchema = signUpSchema.extend({
+  password: passwordSchema,
+});
+
+export const credentialsSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, 'Mot de passe requis'),
+});
+
+export const otpSchema = z
+  .string()
+  .regex(/^\d{6}$/, 'Code OTP à 6 chiffres');
+
+export const newPasswordSchema = z.object({
+  password: passwordSchema,
+  confirm: passwordSchema,
+}).refine(
+  (data) => data.password === data.confirm,
+  {
+    message: 'Les mots de passe ne correspondent pas',
+    path: ['confirm'],
+  }
+);
+
 // ── Vehicle ──────────────────────────────────────────────────────────────────
 
 export const vehicleSchema = z.object({
@@ -93,6 +124,10 @@ export const garageUpdateSchema = z.object({
 // ── Types inférés (utilisables directement dans le code) ─────────────────────
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
+export type SignUpWithPasswordInput = z.infer<typeof signUpWithPasswordSchema>;
+export type CredentialsInput = z.infer<typeof credentialsSchema>;
+export type OtpInput = z.infer<typeof otpSchema>;
+export type NewPasswordInput = z.infer<typeof newPasswordSchema>;
 export type VehicleInput = z.infer<typeof vehicleSchema>;
 export type QuoteRequestInput = z.infer<typeof quoteRequestSchema>;
 export type QuoteInput = z.infer<typeof quoteSchema>;
