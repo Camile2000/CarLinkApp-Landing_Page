@@ -74,7 +74,7 @@ export function Button({
           minHeight: HEIGHT[size],
           paddingHorizontal: PADDING_X[size],
           opacity: isDisabled ? 0.45 : 1,
-          transform: pressed && !isDisabled ? [{ scale: 0.98 }] : undefined,
+          transform: [{ scale: pressed && !isDisabled ? 0.98 : 1 }],
         },
         surface,
         fullWidth && styles.fullWidth,
