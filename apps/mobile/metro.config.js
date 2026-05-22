@@ -21,7 +21,10 @@ config.resolver.nodeModulesPaths = [
 // On remplace ce fichier par un module vide pour éviter le conflit.
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName.includes('setUpFuseboxReactDevToolsDispatcher')) {
-    return { type: 'empty' };
+    return {
+      type: 'sourceFile',
+      filePath: path.resolve(__dirname, 'src/fusebox-polyfill.js'),
+    };
   }
   return context.resolveRequest(context, moduleName, platform);
 };
