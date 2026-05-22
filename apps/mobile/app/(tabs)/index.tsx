@@ -1,9 +1,9 @@
 import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
 } from 'react-native';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { colors, spacing } from '../../src/constants/colors';

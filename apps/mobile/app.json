@@ -7,7 +7,6 @@
     "orientation": "portrait",
     "scheme": "carlink",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#0B1F3A"

@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -6,7 +7,6 @@ import {
   FlatList,
   Dimensions,
   TouchableOpacity,
-  SafeAreaView,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Shield, Eye, Zap } from 'lucide-react-native';
