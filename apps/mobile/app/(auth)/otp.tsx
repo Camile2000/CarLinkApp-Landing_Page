@@ -99,8 +99,9 @@ export default function OtpScreen() {
           redirectTo: 'carlink://reset-password',
         });
       } else {
-        result = await supabase.auth.resetPasswordForEmail(emailString, {
-          redirectTo: 'carlink://verify-email',
+        result = await supabase.auth.resendOtp({
+          email: emailString,
+          type: 'signup',
         });
       }
 
