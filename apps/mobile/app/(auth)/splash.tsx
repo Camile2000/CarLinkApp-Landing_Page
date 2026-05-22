@@ -1,16 +1,25 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { colors } from '../../src/constants/colors';
+import { Logo } from '../../src/components/ui/Logo';
+import { Caption } from '../../src/components/ui/Typography';
+import { palette, spacing } from '../../src/constants/theme';
 
 export default function SplashScreen() {
-  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const fade = useRef(new Animated.Value(0)).current;
+  const loaderWidth = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(fadeAnim, {
+    Animated.timing(fade, {
       toValue: 1,
-      duration: 500,
+      duration: 400,
       useNativeDriver: true,
+    }).start();
+
+    Animated.timing(loaderWidth, {
+      toValue: 1,
+      duration: 2000,
+      useNativeDriver: false,
     }).start();
 
     const timer = setTimeout(() => {
@@ -18,16 +27,38 @@ export default function SplashScreen() {
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, [fadeAnim]);
+  }, []);
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.logoContainer, { opacity: fadeAnim }]}>
-        <Text style={styles.logoText}>
-          <Text style={styles.logoRed}>Car</Text>
-          <Text style={styles.logoWhite}>Link</Text>
-        </Text>
+      <Animated.View style={[styles.center, { opacity: fade }]}>
+        <Logo
+          size={80}
+          tone="white"
+          showWordmark
+          showTagline
+          taglineColor="rgba(255,255,255,0.55)"
+        />
       </Animated.View>
+
+      <View style={styles.bottom}>
+        <View style={styles.loaderTrack}>
+          <Animated.View
+            style={[
+              styles.loaderFill,
+              {
+                width: loaderWidth.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0%', '100%'],
+                }),
+              },
+            ]}
+          />
+        </View>
+        <Caption color="rgba(255,255,255,0.35)" align="center">
+          v 1.0 · Cameroun
+        </Caption>
+      </View>
     </View>
   );
 }
@@ -35,21 +66,32 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.navyDeep,
+    backgroundColor: palette.navy[900],
     justifyContent: 'center',
     alignItems: 'center',
   },
-  logoContainer: {
+  center: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  logoText: {
-    fontSize: 48,
-    fontWeight: '800',
+  bottom: {
+    width: '100%',
+    paddingHorizontal: spacing[10],
+    paddingBottom: spacing[10],
+    gap: spacing[3],
+    alignItems: 'center',
   },
-  logoRed: {
-    color: colors.red,
+  loaderTrack: {
+    width: '100%',
+    height: 2,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 2,
+    overflow: 'hidden',
   },
-  logoWhite: {
-    color: colors.white,
+  loaderFill: {
+    height: 2,
+    backgroundColor: 'rgba(200,16,46,0.8)',
+    borderRadius: 2,
   },
 });

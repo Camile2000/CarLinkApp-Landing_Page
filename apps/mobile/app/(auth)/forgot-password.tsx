@@ -1,41 +1,32 @@
 import React, { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
 import { router } from 'expo-router';
+import { Mail } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
 import { emailSchema } from '@carlink/shared/validators';
-import { colors, spacing } from '../../src/constants/colors';
+import { AuthLayout, authStyles } from '../../src/components/ui/AuthLayout';
 import { Input } from '../../src/components/ui/Input';
 import { Button } from '../../src/components/ui/Button';
+import { Caption } from '../../src/components/ui/Typography';
+import { fg } from '../../src/constants/theme';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleResetPassword = async () => {
+  const handleReset = async () => {
     setErrors({});
 
     try {
-      const validatedEmail = emailSchema.parse(email);
-
+      const validated = emailSchema.parse(email);
       setLoading(true);
 
-      const { error } = await supabase.auth.resetPasswordForEmail(
-        validatedEmail,
-        {
-          redirectTo: 'carlink://reset-password',
-        }
-      );
+      const { error } = await supabase.auth.resetPasswordForEmail(validated, {
+        redirectTo: 'carlink://reset-password',
+      });
 
       if (error) {
-        Alert.alert('Erreur', error.message);
+        setErrors({ form: error.message });
         return;
       }
 
@@ -43,100 +34,54 @@ export default function ForgotPasswordScreen() {
         pathname: '/(auth)/otp',
         params: { email, type: 'recovery' },
       });
-    } catch (error: unknown) {
-      if (error instanceof Error && 'errors' in error && Array.isArray(error.errors)) {
-        const newErrors: Record<string, string> = {};
-        (error.errors as Array<{ path?: string[]; message: string }>).forEach((err) => {
-          if (err.path) {
-            newErrors[err.path[0]] = err.message;
-          }
+    } catch (err: unknown) {
+      if (err instanceof Error && 'errors' in err && Array.isArray(err.errors)) {
+        const next: Record<string, string> = {};
+        (err.errors as Array<{ path?: string[]; message: string }>).forEach((e) => {
+          if (e.path) next[e.path[0]] = e.message;
         });
-        setErrors(newErrors);
+        setErrors(next);
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBack = () => {
-    router.back();
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+    <AuthLayout
+      onBack={() => router.back()}
+      heroIcon={Mail}
+      heroTone="red"
+      title="Mot de passe oublié ?"
+      lead="Entrez votre email. Vous recevrez un code à 6 chiffres pour le réinitialiser."
+    >
+      <Input
+        label="Email"
+        value={email}
+        onChangeText={setEmail}
+        placeholder="vous@exemple.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoComplete="email"
+        error={errors.email ?? errors.form}
+      />
+
+      <Button
+        label="Envoyer le code"
+        onPress={handleReset}
+        loading={loading}
+        disabled={loading || !email.trim()}
+        fullWidth
+        style={authStyles.fullButton}
+      />
+
+      <Caption
+        color={fg.muted}
+        align="center"
+        style={{ marginTop: 20, lineHeight: 18 }}
       >
-        <TouchableOpacity onPress={handleBack}>
-          <Text style={styles.backButton}>← Retour</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.title}>Réinitialiser votre mot de passe</Text>
-        <Text style={styles.subtitle}>
-          Entrez votre email et nous vous enverrons un code pour réinitialiser votre mot de passe.
-        </Text>
-
-        <Input
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="jean@example.com"
-          keyboardType="email-address"
-          error={errors.email}
-        />
-
-        <Button
-          label="Envoyer un code"
-          onPress={handleResetPassword}
-          loading={loading}
-          disabled={loading}
-          style={styles.button}
-        />
-
-        <Text style={styles.info}>
-          Vous recevrez un email avec un code à 6 chiffres pour réinitialiser votre mot de passe.
-        </Text>
-      </ScrollView>
-    </SafeAreaView>
+        Si votre email est enregistré, vous recevrez un code de vérification dans quelques secondes.
+      </Caption>
+    </AuthLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.navyDeep,
-  },
-  content: {
-    paddingHorizontal: spacing[5],
-    paddingVertical: spacing[6],
-  },
-  backButton: {
-    color: colors.red,
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: spacing[4],
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.white,
-    marginBottom: spacing[2],
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.muted,
-    marginBottom: spacing[6],
-    lineHeight: 20,
-  },
-  button: {
-    marginTop: spacing[2],
-  },
-  info: {
-    fontSize: 12,
-    color: colors.muted,
-    marginTop: spacing[4],
-    lineHeight: 18,
-    fontStyle: 'italic',
-  },
-});

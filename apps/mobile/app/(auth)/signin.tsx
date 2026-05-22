@@ -1,19 +1,14 @@
 import React, { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import { Pressable, View } from 'react-native';
 import { router } from 'expo-router';
+import { LogIn } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
 import { credentialsSchema } from '@carlink/shared/validators';
-import { colors, spacing } from '../../src/constants/colors';
+import { AuthLayout, authStyles } from '../../src/components/ui/AuthLayout';
 import { Input } from '../../src/components/ui/Input';
 import { Button } from '../../src/components/ui/Button';
+import { BodySm } from '../../src/components/ui/Typography';
+import { accent, fg } from '../../src/constants/theme';
 
 export default function SignInScreen() {
   const [email, setEmail] = useState('');
@@ -25,163 +20,90 @@ export default function SignInScreen() {
     setErrors({});
 
     try {
-      const validatedData = credentialsSchema.parse({
-        email,
-        password,
-      });
-
+      const data = credentialsSchema.parse({ email, password });
       setLoading(true);
 
       const { error } = await supabase.auth.signInWithPassword({
-        email: validatedData.email,
-        password: validatedData.password,
+        email: data.email,
+        password: data.password,
       });
 
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
-          setErrors({
-            form: 'Email ou mot de passe incorrect',
-          });
+          setErrors({ form: 'Email ou mot de passe incorrect' });
         } else {
-          Alert.alert('Erreur', error.message);
+          setErrors({ form: error.message });
         }
         return;
       }
-    } catch (error: unknown) {
-      if (error instanceof Error && 'errors' in error && Array.isArray(error.errors)) {
-        const newErrors: Record<string, string> = {};
-        (error.errors as Array<{ path?: string[]; message: string }>).forEach((err) => {
-          if (err.path) {
-            newErrors[err.path[0]] = err.message;
-          }
+    } catch (err: unknown) {
+      if (err instanceof Error && 'errors' in err && Array.isArray(err.errors)) {
+        const next: Record<string, string> = {};
+        (err.errors as Array<{ path?: string[]; message: string }>).forEach((e) => {
+          if (e.path) next[e.path[0]] = e.message;
         });
-        setErrors(newErrors);
+        setErrors(next);
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleForgotPassword = () => {
-    router.push('/(auth)/forgot-password');
-  };
-
-  const handleSignUp = () => {
-    router.push('/(auth)/signup');
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.title}>Se connecter</Text>
-        <Text style={styles.subtitle}>
-          Accédez à votre compte CarLink
-        </Text>
-
-        {errors.form && (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorBannerText}>{errors.form}</Text>
-          </View>
-        )}
-
-        <Input
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="jean@example.com"
-          keyboardType="email-address"
-          error={errors.email}
-        />
-
-        <Input
-          label="Mot de passe"
-          value={password}
-          onChangeText={setPassword}
-          placeholder="••••••••"
-          secureTextEntry
-          error={errors.password}
-        />
-
-        <TouchableOpacity onPress={handleForgotPassword}>
-          <Text style={styles.forgotLink}>Mot de passe oublié ?</Text>
-        </TouchableOpacity>
-
-        <Button
-          label="Se connecter"
-          onPress={handleSignIn}
-          loading={loading}
-          disabled={loading}
-          style={styles.button}
-        />
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Pas encore de compte ?</Text>
-          <TouchableOpacity onPress={handleSignUp}>
-            <Text style={styles.signUpLink}>S'inscrire</Text>
-          </TouchableOpacity>
+    <AuthLayout
+      onBack={() => router.back()}
+      heroIcon={LogIn}
+      heroTone="red"
+      title="Se connecter"
+      lead="Accédez à votre compte CarLink."
+    >
+      {errors.form ? (
+        <View style={authStyles.errorBanner}>
+          <BodySm color="#fff" weight="500">{errors.form}</BodySm>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      ) : null}
+
+      <Input
+        label="Email"
+        value={email}
+        onChangeText={setEmail}
+        placeholder="vous@exemple.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoComplete="email"
+        error={errors.email}
+      />
+
+      <Input
+        label="Mot de passe"
+        value={password}
+        onChangeText={setPassword}
+        placeholder="••••••••"
+        secureTextEntry
+        error={errors.password}
+      />
+
+      <Pressable onPress={() => router.push('/(auth)/forgot-password')} hitSlop={8}>
+        <BodySm color={accent.base} weight="600" style={{ marginBottom: 16 }}>
+          Mot de passe oublié ?
+        </BodySm>
+      </Pressable>
+
+      <Button
+        label="Se connecter"
+        onPress={handleSignIn}
+        loading={loading}
+        disabled={loading}
+        fullWidth
+        style={authStyles.fullButton}
+      />
+
+      <View style={authStyles.altRow}>
+        <BodySm color={fg.muted}>Pas encore de compte ?</BodySm>
+        <Pressable onPress={() => router.push('/(auth)/signup')} hitSlop={8}>
+          <BodySm color={accent.base} weight="600"> S'inscrire</BodySm>
+        </Pressable>
+      </View>
+    </AuthLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.navyDeep,
-  },
-  content: {
-    paddingHorizontal: spacing[5],
-    paddingVertical: spacing[6],
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.white,
-    marginBottom: spacing[2],
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.muted,
-    marginBottom: spacing[6],
-  },
-  errorBanner: {
-    backgroundColor: colors.error,
-    padding: spacing[3],
-    borderRadius: 8,
-    marginBottom: spacing[4],
-  },
-  errorBannerText: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  forgotLink: {
-    color: colors.red,
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: spacing[4],
-  },
-  button: {
-    marginTop: spacing[2],
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: spacing[6],
-  },
-  footerText: {
-    color: colors.muted,
-    fontSize: 14,
-  },
-  signUpLink: {
-    color: colors.red,
-    fontWeight: '600',
-    fontSize: 14,
-    marginLeft: spacing[2],
-  },
-});
