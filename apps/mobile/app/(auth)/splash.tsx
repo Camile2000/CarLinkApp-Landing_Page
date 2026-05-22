@@ -14,8 +14,7 @@ export default function SplashScreen() {
     }).start();
 
     const timer = setTimeout(() => {
-      // @ts-expect-error Expo Router doesn't recognize dynamic route groups
-      router.replace('/(auth)/onboarding' as const);
+      router.replace('/(auth)/onboarding');
     }, 2500);
 
     return () => clearTimeout(timer);

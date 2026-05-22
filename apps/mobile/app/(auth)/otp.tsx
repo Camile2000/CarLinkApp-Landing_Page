@@ -73,11 +73,9 @@ export default function OtpScreen() {
       }
 
       if (otpType === 'recovery') {
-        // @ts-expect-error Expo Router doesn't recognize dynamic route groups
-        router.push('/(auth)/new-password' as const);
+        router.push('/(auth)/new-password');
       } else {
-        // @ts-expect-error Expo Router doesn't recognize dynamic route groups
-        router.replace('/(tabs)' as const);
+        router.replace('/(tabs)');
       }
     } catch (_error: unknown) {
       setError('Code OTP invalide');

@@ -63,13 +63,11 @@ export default function SignInScreen() {
   };
 
   const handleForgotPassword = () => {
-    // @ts-expect-error Expo Router doesn't recognize dynamic route groups
-    router.push('/(auth)/forgot-password' as const);
+    router.push('/(auth)/forgot-password');
   };
 
   const handleSignUp = () => {
-    // @ts-expect-error Expo Router doesn't recognize dynamic route groups
-    router.push('/(auth)/signup' as const);
+    router.push('/(auth)/signup');
   };
 
   return (

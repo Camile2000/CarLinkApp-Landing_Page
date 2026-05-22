@@ -45,8 +45,7 @@ export default function NewPasswordScreen() {
         [
           {
             text: 'OK',
-            // @ts-expect-error Expo Router doesn't recognize dynamic route groups
-            onPress: () => router.push('/(auth)/signin' as const),
+            onPress: () => router.push('/(auth)/signin'),
           },
         ]
       );

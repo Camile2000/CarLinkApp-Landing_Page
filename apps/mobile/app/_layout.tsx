@@ -11,11 +11,9 @@ function RootLayoutContent() {
     if (loading) return;
 
     if (session) {
-      // @ts-expect-error Expo Router doesn't recognize dynamic route groups
-      router.replace('/(tabs)' as const);
+      router.replace('/(tabs)');
     } else {
-      // @ts-expect-error Expo Router doesn't recognize dynamic route groups
-      router.replace('/(auth)/splash' as const);
+      router.replace('/(auth)/splash');
     }
   }, [session, loading]);
 

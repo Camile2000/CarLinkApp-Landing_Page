@@ -58,8 +58,7 @@ export default function SignUpScreen() {
       }
 
       router.push({
-        // @ts-expect-error Expo Router doesn't recognize dynamic route groups
-        pathname: '/(auth)/otp' as const,
+        pathname: '/(auth)/otp',
         params: { email: email || '', type: 'signup' },
       });
     } catch (error: unknown) {
@@ -78,8 +77,7 @@ export default function SignUpScreen() {
   };
 
   const handleSignIn = () => {
-    // @ts-expect-error Expo Router doesn't recognize dynamic route groups
-    router.push('/(auth)/signin' as const);
+    router.push('/(auth)/signin');
   };
 
   return (

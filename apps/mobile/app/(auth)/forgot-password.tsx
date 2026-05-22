@@ -40,8 +40,7 @@ export default function ForgotPasswordScreen() {
       }
 
       router.push({
-        // @ts-expect-error Expo Router doesn't recognize dynamic route groups
-        pathname: '/(auth)/otp' as const,
+        pathname: '/(auth)/otp',
         params: { email, type: 'recovery' },
       });
     } catch (error: unknown) {

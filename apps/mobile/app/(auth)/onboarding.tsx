@@ -65,13 +65,11 @@ export default function OnboardingScreen() {
   };
 
   const handleStart = () => {
-    // @ts-expect-error Expo Router doesn't recognize dynamic route groups
-    router.push('/(auth)/signup' as const);
+    router.push('/(auth)/signup');
   };
 
   const handleSignIn = () => {
-    // @ts-expect-error Expo Router doesn't recognize dynamic route groups
-    router.push('/(auth)/signin' as const);
+    router.push('/(auth)/signin');
   };
 
   const toggleLanguage = () => {
