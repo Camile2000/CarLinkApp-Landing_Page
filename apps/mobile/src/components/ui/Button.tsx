@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Pressable,
   StyleSheet,
   Text,
@@ -62,50 +63,73 @@ export function Button({
   const surface = surfaceStyle(variant, isDisabled);
   const labelColor = textColor(variant, isDisabled);
   const iconSize = size === 'sm' ? 16 : 18;
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const animateTo = (toValue: number) => {
+    Animated.spring(scale, {
+      toValue,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 0,
+    }).start();
+  };
+
+  const handlePressIn = () => {
+    if (!isDisabled) animateTo(0.98);
+  };
+  const handlePressOut = () => {
+    animateTo(1);
+  };
+
+  const wrapperStyle: ViewStyle = fullWidth ? styles.wrapperFull : styles.wrapper;
+  const elevation =
+    variant === 'primary' && !isDisabled ? shadow.xs : null;
 
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={isDisabled}
-      testID={testID}
-      style={({ pressed }) => [
-        styles.base,
-        {
-          minHeight: HEIGHT[size],
-          paddingHorizontal: PADDING_X[size],
-          opacity: isDisabled ? 0.45 : 1,
-          transform: [{ scale: pressed && !isDisabled ? 0.98 : 1 }],
-        },
-        surface,
-        fullWidth && styles.fullWidth,
-        variant === 'primary' && !isDisabled && shadow.xs,
-        style,
-      ]}
-    >
-      {loading ? (
-        <ActivityIndicator size="small" color={labelColor} />
-      ) : (
-        <View style={styles.content}>
-          {LeadingIcon ? (
-            <LeadingIcon size={iconSize} color={labelColor} strokeWidth={2} />
-          ) : null}
-          <Text
-            style={[
-              styles.label,
-              { color: labelColor, fontSize: FONT_SIZE[size] },
-              variant === 'link' && styles.linkLabel,
-              textStyle,
-            ]}
-            numberOfLines={1}
-          >
-            {label}
-          </Text>
-          {TrailingIcon ? (
-            <TrailingIcon size={iconSize} color={labelColor} strokeWidth={2} />
-          ) : null}
-        </View>
-      )}
-    </Pressable>
+    <Animated.View style={[wrapperStyle, { transform: [{ scale }] }]}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        disabled={isDisabled}
+        testID={testID}
+        style={[
+          styles.base,
+          {
+            minHeight: HEIGHT[size],
+            paddingHorizontal: PADDING_X[size],
+            opacity: isDisabled ? 0.45 : 1,
+          },
+          surface,
+          elevation,
+          style ?? null,
+        ]}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color={labelColor} />
+        ) : (
+          <View style={styles.content}>
+            {LeadingIcon ? (
+              <LeadingIcon size={iconSize} color={labelColor} strokeWidth={2} />
+            ) : null}
+            <Text
+              style={[
+                styles.label,
+                { color: labelColor, fontSize: FONT_SIZE[size] },
+                variant === 'link' ? styles.linkLabel : null,
+                textStyle ?? null,
+              ]}
+              numberOfLines={1}
+            >
+              {label}
+            </Text>
+            {TrailingIcon ? (
+              <TrailingIcon size={iconSize} color={labelColor} strokeWidth={2} />
+            ) : null}
+          </View>
+        )}
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -165,13 +189,16 @@ function textColor(variant: Variant, disabled: boolean): string {
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    alignSelf: 'flex-start',
+  },
+  wrapperFull: {
+    alignSelf: 'stretch',
+  },
   base: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  fullWidth: {
-    alignSelf: 'stretch',
   },
   content: {
     flexDirection: 'row',
