@@ -84,7 +84,6 @@ export function Input({
               {Icon && (
                 <Icon
                   size={20}
-                  // @ts-expect-error Lucide icon types don't include color prop for all icons
                   color={colors.slate}
                   strokeWidth={1.75}
                 />
@@ -96,7 +95,6 @@ export function Input({
             <TouchableOpacity onPress={onIconPress} style={styles.iconButton}>
               <Icon
                 size={20}
-                // @ts-expect-error Lucide icon types don't include color prop for all icons
                 color={colors.slate}
                 strokeWidth={1.75}
               />
