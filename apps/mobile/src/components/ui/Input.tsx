@@ -5,22 +5,35 @@ import {
   Text,
   StyleSheet,
   ViewStyle,
-  TouchableOpacity,
+  TextInputProps,
+  Pressable,
 } from 'react-native';
-import { LucideIcon } from 'lucide-react-native';
-import { colors, spacing, radius } from '../../constants/colors';
+import { Eye, EyeOff, LucideIcon } from 'lucide-react-native';
+import {
+  bg,
+  border,
+  fg,
+  palette,
+  radius,
+  spacing,
+  typography,
+} from '../../constants/theme';
 
 interface InputProps {
-  label: string;
+  label?: string;
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
   error?: string;
+  helper?: string;
   secureTextEntry?: boolean;
-  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
+  keyboardType?: TextInputProps['keyboardType'];
+  autoCapitalize?: TextInputProps['autoCapitalize'];
+  autoComplete?: TextInputProps['autoComplete'];
   editable?: boolean;
-  icon?: LucideIcon;
-  onIconPress?: () => void;
+  leadingIcon?: LucideIcon;
+  trailingIcon?: LucideIcon;
+  onTrailingIconPress?: () => void;
   style?: ViewStyle;
 }
 
@@ -30,80 +43,69 @@ export function Input({
   onChangeText,
   placeholder,
   error,
+  helper,
   secureTextEntry = false,
   keyboardType = 'default',
+  autoCapitalize = 'sentences',
+  autoComplete,
   editable = true,
-  icon: Icon,
-  onIconPress,
+  leadingIcon: LeadingIcon,
+  trailingIcon: TrailingIcon,
+  onTrailingIconPress,
   style,
 }: InputProps) {
   const [focused, setFocused] = useState(false);
-  const [showPassword, setShowPassword] = useState(!secureTextEntry);
-
-  const isFloating = focused || value.length > 0;
+  const [hidden, setHidden] = useState(secureTextEntry);
   const hasError = !!error;
+  const ToggleIcon = hidden ? Eye : EyeOff;
 
   return (
     <View style={[styles.container, style]}>
+      {label ? <Text style={styles.label}>{label}</Text> : null}
       <View
         style={[
-          styles.inputWrapper,
-          focused && styles.inputWrapperFocused,
-          hasError && styles.inputWrapperError,
+          styles.field,
+          focused && styles.fieldFocused,
+          hasError && styles.fieldError,
+          !editable && styles.fieldDisabled,
         ]}
       >
-        <Text
-          style={[
-            styles.label,
-            isFloating && styles.labelFloating,
-            hasError && styles.labelError,
-          ]}
-        >
-          {label}
-        </Text>
-
-        <View style={styles.inputRow}>
-          <TextInput
-            style={[styles.input, !editable && styles.inputDisabled]}
-            value={value}
-            onChangeText={onChangeText}
-            placeholder={isFloating ? '' : placeholder}
-            placeholderTextColor={colors.muted}
-            secureTextEntry={secureTextEntry && showPassword}
-            keyboardType={keyboardType}
-            editable={editable}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
+        {LeadingIcon ? (
+          <LeadingIcon
+            size={18}
+            color={focused ? fg.default : palette.neutral[500]}
+            strokeWidth={1.75}
           />
-
-          {secureTextEntry && (
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.iconButton}
-            >
-              {Icon && (
-                <Icon
-                  size={20}
-                  color={colors.slate}
-                  strokeWidth={1.75}
-                />
-              )}
-            </TouchableOpacity>
-          )}
-
-          {Icon && !secureTextEntry && onIconPress && (
-            <TouchableOpacity onPress={onIconPress} style={styles.iconButton}>
-              <Icon
-                size={20}
-                color={colors.slate}
-                strokeWidth={1.75}
-              />
-            </TouchableOpacity>
-          )}
-        </View>
+        ) : null}
+        <TextInput
+          style={styles.input}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={fg.subtle}
+          secureTextEntry={secureTextEntry && hidden}
+          keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
+          autoComplete={autoComplete}
+          editable={editable}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+        />
+        {secureTextEntry ? (
+          <Pressable onPress={() => setHidden((h) => !h)} hitSlop={8}>
+            <ToggleIcon size={18} color={palette.neutral[500]} strokeWidth={1.75} />
+          </Pressable>
+        ) : TrailingIcon ? (
+          <Pressable onPress={onTrailingIconPress} hitSlop={8}>
+            <TrailingIcon size={18} color={palette.neutral[500]} strokeWidth={1.75} />
+          </Pressable>
+        ) : null}
       </View>
-
-      {hasError && <Text style={styles.errorText}>{error}</Text>}
+      {hasError ? (
+        <Text style={styles.error}>{error}</Text>
+      ) : helper ? (
+        <Text style={styles.helper}>{helper}</Text>
+      ) : null}
     </View>
   );
 }
@@ -112,55 +114,50 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: spacing[4],
   },
-  inputWrapper: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[2],
-    backgroundColor: colors.white,
-  },
-  inputWrapperFocused: {
-    borderColor: colors.red,
-  },
-  inputWrapperError: {
-    borderColor: colors.error,
-  },
   label: {
-    fontSize: 16,
-    color: colors.slate,
-    marginBottom: spacing[1],
-    fontWeight: '500',
-  },
-  labelFloating: {
-    fontSize: 12,
-    color: colors.muted,
+    fontSize: typography.size.label,
+    fontWeight: typography.weight.semibold,
+    color: fg.strong,
     marginBottom: spacing[2],
+    letterSpacing: typography.tracking.wide,
   },
-  labelError: {
-    color: colors.error,
-  },
-  inputRow: {
+  field: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing[2],
+    minHeight: 44,
+    paddingHorizontal: spacing[3],
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: border.subtle,
+    backgroundColor: palette.neutral[100],
+  },
+  fieldFocused: {
+    borderColor: border.strong,
+    backgroundColor: bg.surface,
+  },
+  fieldError: {
+    borderColor: border.accent,
+    backgroundColor: bg.surface,
+  },
+  fieldDisabled: {
+    opacity: 0.5,
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    color: colors.slate,
+    fontSize: typography.size.body,
+    color: fg.strong,
     paddingVertical: spacing[2],
   },
-  inputDisabled: {
-    opacity: 0.5,
-  },
-  iconButton: {
-    padding: spacing[2],
-    marginLeft: spacing[1],
-  },
-  errorText: {
-    fontSize: 12,
-    color: colors.error,
+  error: {
     marginTop: spacing[1],
-    fontWeight: '500',
+    fontSize: typography.size.caption,
+    color: border.accent,
+    fontWeight: typography.weight.medium,
+  },
+  helper: {
+    marginTop: spacing[1],
+    fontSize: typography.size.caption,
+    color: fg.muted,
   },
 });

@@ -5,13 +5,22 @@ import {
   StyleSheet,
   ViewStyle,
 } from 'react-native';
-import { colors, spacing, radius } from '../../constants/colors';
+import {
+  bg,
+  border,
+  fg,
+  palette,
+  radius,
+  spacing,
+  typography,
+} from '../../constants/theme';
 
 interface OtpInputProps {
   value: string;
   onChangeText: (text: string) => void;
   length?: number;
   style?: ViewStyle;
+  hasError?: boolean;
 }
 
 export function OtpInput({
@@ -19,54 +28,62 @@ export function OtpInput({
   onChangeText,
   length = 6,
   style,
+  hasError = false,
 }: OtpInputProps) {
-  const inputRefs = useRef<(TextInput | null)[]>([]);
+  const inputRefs = useRef<Array<TextInput | null>>([]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
   const handleChange = (text: string, index: number) => {
     if (!/^\d*$/.test(text)) return;
 
-    const newValue = value.split('');
-    newValue[index] = text;
-    const otpValue = newValue.join('').slice(0, length);
-    onChangeText(otpValue);
+    const next = value.split('');
+    next[index] = text;
+    const otp = next.join('').slice(0, length);
+    onChangeText(otp);
 
     if (text && index < length - 1) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
-  const handleKeyPress = (e: { nativeEvent: { key: string } }, index: number) => {
+  const handleKeyPress = (
+    e: { nativeEvent: { key: string } },
+    index: number,
+  ) => {
     if (e.nativeEvent.key === 'Backspace' && !value[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
-  const cells = Array.from({ length }).map((_, index) => (
-    <TextInput
-      key={index}
-      ref={(ref) => {
-        inputRefs.current[index] = ref;
-      }}
-      style={[
-        styles.cell,
-        focusedIndex === index && styles.cellFocused,
-      ]}
-      value={value[index] || ''}
-      onChangeText={(text) => handleChange(text, index)}
-      onKeyPress={(e) => handleKeyPress(e, index)}
-      onFocus={() => setFocusedIndex(index)}
-      onBlur={() => setFocusedIndex(null)}
-      keyboardType="numeric"
-      maxLength={1}
-      textAlign="center"
-      selectionColor={colors.red}
-    />
-  ));
-
   return (
     <View style={[styles.container, style]}>
-      {cells}
+      {Array.from({ length }).map((_, index) => {
+        const isFocused = focusedIndex === index;
+        const isFilled = !!value[index];
+        return (
+          <TextInput
+            key={index}
+            ref={(ref) => {
+              inputRefs.current[index] = ref;
+            }}
+            style={[
+              styles.cell,
+              isFilled && styles.cellFilled,
+              isFocused && styles.cellFocused,
+              hasError && styles.cellError,
+            ]}
+            value={value[index] || ''}
+            onChangeText={(t) => handleChange(t, index)}
+            onKeyPress={(e) => handleKeyPress(e, index)}
+            onFocus={() => setFocusedIndex(index)}
+            onBlur={() => setFocusedIndex(null)}
+            keyboardType="numeric"
+            maxLength={1}
+            textAlign="center"
+            selectionColor={border.accent}
+          />
+        );
+      })}
     </View>
   );
 }
@@ -75,20 +92,30 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginVertical: spacing[4],
+    gap: spacing[2],
   },
   cell: {
-    width: 48,
-    height: 56,
+    flex: 1,
+    aspectRatio: 1,
+    maxWidth: 56,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: border.subtle,
     borderRadius: radius.md,
     fontSize: 24,
-    fontWeight: '600',
-    color: colors.slate,
-    backgroundColor: colors.white,
+    fontWeight: typography.weight.bold,
+    color: fg.strong,
+    backgroundColor: palette.neutral[100],
+  },
+  cellFilled: {
+    backgroundColor: bg.surface,
+    borderColor: border.default,
   },
   cellFocused: {
-    borderColor: colors.red,
+    backgroundColor: bg.surface,
+    borderColor: border.strong,
+    borderWidth: 2,
+  },
+  cellError: {
+    borderColor: border.accent,
   },
 });
