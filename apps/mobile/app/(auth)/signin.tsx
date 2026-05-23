@@ -100,7 +100,7 @@ export default function SignInScreen() {
 
       <View style={authStyles.altRow}>
         <BodySm color={fg.muted}>Pas encore de compte ?</BodySm>
-        <Pressable onPress={() => router.push('/(auth)/signup')} hitSlop={8}>
+        <Pressable onPress={() => router.push('/(auth)/role-choice')} hitSlop={8}>
           <BodySm color={accent.base} weight="600"> S'inscrire</BodySm>
         </Pressable>
       </View>
