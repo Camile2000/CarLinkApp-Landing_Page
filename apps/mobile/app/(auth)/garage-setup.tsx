@@ -170,7 +170,9 @@ export default function GarageSetupScreen() {
 
         <View style={{ marginBottom: 24 }}>
           <BodySm color={fg.muted} weight="500" style={{ marginBottom: 12 }}>
-            Spécialités {selectedSpecialties.length === 0 ? '(au moins 1)' : `(${selectedSpecialties.length})`}
+            {selectedSpecialties.length === 0
+              ? 'Spécialités (sélectionnez-en au moins une)'
+              : `Spécialités · ${selectedSpecialties.length} sélectionnée${selectedSpecialties.length > 1 ? 's' : ''}`}
           </BodySm>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {SPECIALTIES.map((specialty) => {

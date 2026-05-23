@@ -20,6 +20,7 @@ export default function AuthLayout() {
       <Stack.Screen name="otp" />
       <Stack.Screen name="new-password" />
       <Stack.Screen name="garage-setup" />
+      <Stack.Screen name="reset-password" />
     </Stack>
   );
 }

@@ -21,8 +21,9 @@ export default function SignUpScreen() {
   const handleSignUp = async () => {
     setErrors({});
 
-    if (!selectedRole) {
-      setErrors({ form: 'Veuillez sélectionner un rôle' });
+    if (selectedRole !== 'conductor' && selectedRole !== 'garage') {
+      setErrors({ form: 'Veuillez sélectionner un rôle valide' });
+      router.replace('/(auth)/role-choice');
       return;
     }
 

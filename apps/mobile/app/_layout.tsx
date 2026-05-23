@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 
 function RootLayoutContent() {
-  const { session, profile, loading } = useAuth();
+  const { session, profile, loading, profileError, signOut } = useAuth();
 
   useEffect(() => {
     if (loading) return;
@@ -15,17 +15,29 @@ function RootLayoutContent() {
       return;
     }
 
-    // loading=false guarantees profile fetch is complete
-    switch (profile?.role) {
+    // Session présente mais fetch profile a échoué : on ne devine pas le rôle,
+    // on déconnecte proprement pour éviter de router au mauvais endroit.
+    if (profileError) {
+      void signOut();
+      router.replace('/(auth)/signin');
+      return;
+    }
+
+    // Session présente mais profile=null (trigger pas encore exécuté côté DB).
+    // On attend : le retry interne d'AuthContext relance, et un nouveau cycle
+    // se déclenchera. Ne pas rediriger.
+    if (!profile) return;
+
+    switch (profile.role) {
       case 'garage':
         router.replace('/(garage)');
         break;
-      case 'conductor':
       case 'admin':
+      case 'conductor':
       default:
         router.replace('/(driver)');
     }
-  }, [session, profile, loading]);
+  }, [session, profile, loading, profileError, signOut]);
 
   if (loading) return null;
 
