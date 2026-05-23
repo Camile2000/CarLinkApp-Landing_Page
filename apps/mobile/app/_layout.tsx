@@ -5,32 +5,37 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 
 function RootLayoutContent() {
-  const { session, loading } = useAuth();
+  const { session, profile, loading } = useAuth();
 
   useEffect(() => {
     if (loading) return;
 
-    if (session) {
-      router.replace('/(tabs)');
-    } else {
+    if (!session) {
       router.replace('/(auth)/splash');
+      return;
     }
-  }, [session, loading]);
 
-  if (loading) {
-    return null;
-  }
+    // loading=false guarantees profile fetch is complete
+    switch (profile?.role) {
+      case 'garage':
+        router.replace('/(garage)');
+        break;
+      case 'conductor':
+      case 'admin':
+      default:
+        router.replace('/(driver)');
+    }
+  }, [session, profile, loading]);
+
+  if (loading) return null;
 
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: { backgroundColor: '#0B1F3A' },
-        headerTintColor: '#fff',
-      }}
-    >
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="index" options={{ title: 'CarLink' }} />
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(driver)" />
+      <Stack.Screen name="(garage)" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="index" options={{ headerShown: true, title: 'CarLink' }} />
     </Stack>
   );
 }
