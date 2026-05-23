@@ -1,509 +1,824 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
-  Dimensions,
-  FlatList,
   Pressable,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
-  BadgeCheck,
+  ArrowRight,
+  Camera,
   Check,
   Star,
+  Wrench,
 } from 'lucide-react-native';
-import { Screen } from '../../src/components/ui/Screen';
 import { Button } from '../../src/components/ui/Button';
-import {
-  H2,
-  BodySm,
-  Caption,
-  Eyebrow,
-} from '../../src/components/ui/Typography';
-import {
-  accent,
-  bg,
-  border,
-  fg,
-  palette,
-  radius,
-  semantic,
-  spacing,
-} from '../../src/constants/theme';
 
-const { width } = Dimensions.get('window');
+type Lang = 'fr' | 'en';
 
-type Language = 'fr' | 'en';
-
-interface Slide {
-  id: string;
+interface SlideText {
   eyebrow: { fr: string; en: string };
   title: { fr: string; en: string };
   desc: { fr: string; en: string };
 }
 
-const SLIDES: Slide[] = [
+const SLIDES: SlideText[] = [
   {
-    id: '1',
-    eyebrow: { fr: "La confiance d'abord", en: 'Trust first' },
+    eyebrow: { fr: "LA CONFIANCE D'ABORD", en: 'TRUST COMES FIRST' },
     title: {
       fr: 'Des garages certifiés,\npas des inconnus.',
       en: 'Certified garages,\nnot strangers.',
     },
     desc: {
-      fr: 'Chaque garage CarLink est vérifié sur place : adresse, équipement, expérience. Vous voyez les avis vérifiés des vrais clients.',
-      en: 'Every CarLink garage is verified on-site: address, equipment, experience. Real verified reviews from real customers.',
+      fr: 'Chaque garage CarLink est vérifié sur place : adresse, équipement, expérience. Vous voyez les avis vérifiés des vrais clients — pas du remplissage.',
+      en: 'Every CarLink garage is checked on site: address, gear, experience. You see verified reviews from real customers — no filler.',
     },
   },
   {
-    id: '2',
-    eyebrow: { fr: 'Plus de devinettes', en: 'No more guessing' },
+    eyebrow: { fr: 'PLUS DE DEVINETTES', en: 'NO MORE GUESSWORK' },
     title: {
       fr: 'Comparez les devis\navant de payer.',
       en: 'Compare quotes\nbefore you pay.',
     },
     desc: {
-      fr: "Décrivez le problème une fois, recevez plusieurs devis détaillés. Pièces, main d'oeuvre, délai — tout est écrit, sans surprise.",
-      en: 'Describe the problem once, get multiple detailed quotes. Parts, labour, timeline — all written out, no surprises.',
+      fr: "Décrivez le problème une fois, recevez plusieurs devis détaillés. Pièces, main d'œuvre, délai — tout est écrit noir sur blanc, sans surprise au moment de régler.",
+      en: 'Describe the issue once, get several detailed quotes back. Parts, labor, lead time — written down, so there are no surprises when you settle the bill.',
     },
   },
   {
-    id: '3',
-    eyebrow: { fr: 'Votre véhicule, votre contrôle', en: 'Your car, your control' },
+    eyebrow: { fr: 'VOUS GARDEZ LA MAIN', en: 'YOU STAY IN CONTROL' },
     title: {
-      fr: 'Suivez chaque étape\nde la réparation.',
-      en: 'Track every step\nof the repair.',
+      fr: 'Suivez la réparation,\nétape par étape.',
+      en: 'Follow the repair,\nstep by step.',
     },
     desc: {
-      fr: "Photos avant/après, statuts en temps réel, carnet d'entretien automatique. Vous savez toujours où en est votre voiture.",
-      en: 'Before/after photos, real-time status updates, automatic maintenance log. You always know where your car stands.',
+      fr: 'Photos avant / pendant / après, étapes validées, notifications à chaque changement. Vous savez où en est votre véhicule — même sans appeler le garage.',
+      en: 'Photos before / during / after, validated stages, a notification at each change. You know exactly where your vehicle is — without ever calling the garage.',
     },
   },
 ];
 
-function GarageCertifiedIllus() {
-  return (
-    <View style={illus.card}>
-      <View style={illus.row}>
-        <View style={illus.avatar}>
-          <BadgeCheck size={20} color={accent.base} strokeWidth={2} />
-        </View>
-        <View style={illus.meta}>
-          <BodySm weight="600" color={fg.strong}>
-            Garage Étoile · Bonapriso
-          </BodySm>
-          <View style={illus.starRow}>
-            <Star size={12} color="#C97A0E" fill="#C97A0E" />
-            <Caption color={fg.muted}> 4.8 · 142 avis</Caption>
-          </View>
-        </View>
-        <View style={illus.certBadge}>
-          <BadgeCheck size={16} color={accent.base} strokeWidth={2} />
-        </View>
-      </View>
-      <View style={illus.tagRow}>
-        <View style={illus.tag}>
-          <Check size={10} color={semantic.success} strokeWidth={3} />
-          <Caption color={semantic.success}>Pièces d'origine</Caption>
-        </View>
-        <View style={illus.tag}>
-          <Check size={10} color={semantic.success} strokeWidth={3} />
-          <Caption color={semantic.success}>Sur place 2024</Caption>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function QuotesIllus() {
-  const quotes = [
-    { name: 'Garage Étoile', price: '38 500', best: true },
-    { name: 'Auto Service Akwa', price: '45 000', best: false },
-    { name: 'Méca+ Bonabéri', price: '52 000', best: false },
-  ];
-  return (
-    <View style={illus.quoteList}>
-      {quotes.map((q) => (
-        <View
-          key={q.name}
-          style={[illus.quoteRow, q.best && illus.quoteRowBest]}
-        >
-          <View style={illus.quoteMeta}>
-            <BodySm weight="600" color={fg.strong} style={{ fontSize: 12 }}>
-              {q.name}
-            </BodySm>
-            {q.best && (
-              <View style={illus.bestChip}>
-                <Caption color={accent.base} weight="600">
-                  Meilleur prix
-                </Caption>
-              </View>
-            )}
-          </View>
-          <BodySm weight="700" color={q.best ? accent.base : fg.default}>
-            {q.price} <Caption color={fg.muted}>FCFA</Caption>
-          </BodySm>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function TrackingIllus() {
-  const steps = [
-    { label: 'Devis accepté', done: true },
-    { label: 'En réparation', done: true, active: true },
-    { label: 'Photos ajoutées', done: false },
-    { label: 'Terminé', done: false },
-  ];
-  return (
-    <View style={illus.trackList}>
-      {steps.map((s, i) => (
-        <View key={s.label} style={illus.trackRow}>
-          <View
-            style={[
-              illus.trackDot,
-              s.done && illus.trackDotDone,
-              s.active && illus.trackDotActive,
-            ]}
-          >
-            {s.done && <Check size={10} color="#fff" strokeWidth={3} />}
-          </View>
-          {i < steps.length - 1 && (
-            <View
-              style={[illus.trackLine, s.done && illus.trackLineDone]}
-            />
-          )}
-          <Caption
-            color={s.active ? fg.strong : s.done ? semantic.success : fg.muted}
-            weight={s.active ? '600' : '400'}
-          >
-            {s.label}
-          </Caption>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-const ILLUSTRATIONS = [GarageCertifiedIllus, QuotesIllus, TrackingIllus];
-
 export default function OnboardingScreen() {
   const [index, setIndex] = useState(0);
-  const [lang, setLang] = useState<Language>('fr');
-  const listRef = useRef<FlatList>(null);
+  const [lang, setLang] = useState<Lang>('fr');
+  const insets = useSafeAreaInsets();
+
+  const slide = SLIDES[index];
+  const isLast = index === SLIDES.length - 1;
 
   const goNext = () => {
-    if (index < SLIDES.length - 1) {
-      listRef.current?.scrollToIndex({ index: index + 1, animated: true });
+    if (!isLast) {
       setIndex(index + 1);
     } else {
       router.push('/(auth)/signup');
     }
   };
 
+  const goSignIn = () => router.push('/(auth)/signin');
   const skip = () => router.push('/(auth)/signup');
 
-  const slide = SLIDES[index];
-  const Illus = ILLUSTRATIONS[index];
+  const ctaLabel = isLast
+    ? lang === 'fr'
+      ? 'Commencer'
+      : 'Get started'
+    : lang === 'fr'
+      ? 'Suivant'
+      : 'Next';
+
+  const altLabel = isLast
+    ? lang === 'fr'
+      ? "J'ai déjà un compte"
+      : 'I already have an account'
+    : null;
 
   return (
-    <Screen tone="paper">
-      {/* Top bar */}
-      <View style={styles.topBar}>
-        <View style={styles.langToggle}>
-          {(['fr', 'en'] as Language[]).map((l) => (
-            <Pressable
-              key={l}
-              onPress={() => setLang(l)}
-              style={[styles.langBtn, lang === l && styles.langBtnOn]}
-            >
-              <BodySm
-                weight="600"
-                color={lang === l ? fg.strong : fg.muted}
-                style={styles.langText}
-              >
-                {l.toUpperCase()}
-              </BodySm>
-            </Pressable>
-          ))}
-        </View>
-        <Pressable onPress={skip} hitSlop={8}>
-          <BodySm color={fg.muted} weight="600">
-            {lang === 'fr' ? 'Passer' : 'Skip'}
-          </BodySm>
-        </Pressable>
-      </View>
-
-      {/* Illustration stage */}
-      <View style={styles.stage}>
-        <View style={styles.illustBg}>
-          <Illus />
-        </View>
-      </View>
-
-      {/* Text content */}
-      <View style={styles.text}>
-        <Eyebrow style={styles.eyebrow}>
-          {lang === 'fr' ? slide.eyebrow.fr : slide.eyebrow.en}
-        </Eyebrow>
-        <H2 style={styles.title}>
-          {lang === 'fr' ? slide.title.fr : slide.title.en}
-        </H2>
-        <BodySm color={fg.muted} style={styles.desc}>
-          {lang === 'fr' ? slide.desc.fr : slide.desc.en}
-        </BodySm>
-      </View>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <View style={styles.dots}>
-          {SLIDES.map((_, i) => (
-            <View
-              key={i}
-              style={[styles.dot, i === index && styles.dotActive]}
-            />
-          ))}
-        </View>
-        <Button
-          label={
-            index === SLIDES.length - 1
-              ? lang === 'fr' ? 'Commencer' : 'Get started'
-              : lang === 'fr' ? 'Suivant' : 'Next'
-          }
-          onPress={goNext}
-          fullWidth
-          style={styles.cta}
-        />
-        <Pressable
-          onPress={() => router.push('/(auth)/signin')}
-          style={styles.altRow}
-          hitSlop={8}
-        >
-          <BodySm color={fg.muted}>
-            {lang === 'fr' ? 'Déjà un compte ?' : 'Already have an account?'}
-          </BodySm>
-          <BodySm color={accent.base} weight="600">
-            {lang === 'fr' ? ' Se connecter' : ' Sign in'}
-          </BodySm>
-        </Pressable>
-      </View>
-
-      {/* Hidden FlatList to keep scroll ref consistent */}
-      <FlatList
-        ref={listRef}
-        data={SLIDES}
-        keyExtractor={(s) => s.id}
-        horizontal
-        pagingEnabled
-        scrollEnabled={false}
-        renderItem={() => <View style={{ width }} />}
-        style={{ height: 0 }}
+    <View style={s.root}>
+      <LinearGradient
+        colors={['#1F2937', '#0A0E15', '#0A0E15']}
+        locations={[0, 0.6, 1]}
+        style={StyleSheet.absoluteFill}
       />
-    </Screen>
+      <View style={s.haloRed} />
+
+      <View
+        style={[
+          s.safe,
+          { paddingTop: insets.top + 6, paddingBottom: insets.bottom + 6 },
+        ]}
+      >
+        <View style={s.topBar}>
+          <View style={s.langToggle}>
+            {(['fr', 'en'] as Lang[]).map((l) => (
+              <Pressable
+                key={l}
+                onPress={() => setLang(l)}
+                style={[s.langBtn, lang === l && s.langBtnOn]}
+                hitSlop={6}
+              >
+                <Text style={[s.langTxt, lang === l && s.langTxtOn]}>
+                  {l.toUpperCase()}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Pressable onPress={skip} hitSlop={8}>
+            <Text style={s.skipTxt}>
+              {lang === 'fr' ? 'Passer' : 'Skip'}
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={s.stage}>
+          {index === 0 ? <GarageIllus /> : null}
+          {index === 1 ? <QuotesIllus /> : null}
+          {index === 2 ? <TrackingIllus lang={lang} /> : null}
+        </View>
+
+        <View style={s.text}>
+          <Text style={s.eyebrow}>
+            {lang === 'fr' ? slide.eyebrow.fr : slide.eyebrow.en}
+          </Text>
+          <Text style={s.title}>
+            {lang === 'fr' ? slide.title.fr : slide.title.en}
+          </Text>
+          <Text style={s.desc}>
+            {lang === 'fr' ? slide.desc.fr : slide.desc.en}
+          </Text>
+        </View>
+
+        <View style={s.footer}>
+          <View style={s.dots}>
+            {SLIDES.map((_, i) => (
+              <View
+                key={i}
+                style={[s.dot, i === index && s.dotOn]}
+              />
+            ))}
+          </View>
+          <Button
+            label={ctaLabel}
+            onPress={goNext}
+            size="md"
+            trailingIcon={ArrowRight}
+            style={s.cta}
+          />
+        </View>
+
+        {altLabel ? (
+          <Pressable onPress={goSignIn} hitSlop={8} style={s.altWrap}>
+            <Text style={s.altTxt}>{altLabel}</Text>
+          </Pressable>
+        ) : (
+          <Pressable onPress={goSignIn} hitSlop={8} style={s.altWrap}>
+            <Text style={s.altTxt}>
+              {lang === 'fr' ? 'Déjà un compte ? ' : 'Already have an account? '}
+              <Text style={s.altTxtAccent}>
+                {lang === 'fr' ? 'Se connecter' : 'Sign in'}
+              </Text>
+            </Text>
+          </Pressable>
+        )}
+      </View>
+    </View>
   );
 }
 
-const illus = StyleSheet.create({
-  card: {
-    backgroundColor: bg.surface,
-    borderRadius: radius.lg,
-    padding: spacing[3],
-    borderWidth: 1,
-    borderColor: border.subtle,
-    gap: spacing[3],
+function GarageIllus() {
+  return (
+    <View style={ill.stage1}>
+      <View style={ill.card1}>
+        <View style={ill.row}>
+          <View style={ill.avatar}>
+            <Wrench size={18} color="#1F2937" strokeWidth={2.2} />
+          </View>
+          <View style={ill.meta}>
+            <Text style={ill.name} numberOfLines={1}>
+              Garage Étoile · Bo…
+            </Text>
+            <View style={ill.starRow}>
+              <Star size={10} color="#C97A0E" fill="#C97A0E" />
+              <Text style={ill.sub}> 4.8 · 142 avis</Text>
+            </View>
+          </View>
+          <View style={ill.stamp}>
+            <Check size={16} color="#fff" strokeWidth={3} />
+          </View>
+        </View>
+        <View style={ill.tags}>
+          <View style={[ill.tag, ill.tagOk]}>
+            <Check size={10} color="#186B3B" strokeWidth={3} />
+            <Text style={ill.tagOkTxt}>Pièces d'origine</Text>
+          </View>
+          <View style={[ill.tag, ill.tagOk]}>
+            <Check size={10} color="#186B3B" strokeWidth={3} />
+            <Text style={ill.tagOkTxt}>Sur place 2024</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={ill.mini}>
+        <View style={ill.miniAv}>
+          <Text style={ill.miniAvTxt}>JE</Text>
+        </View>
+        <View style={ill.miniMeta}>
+          <Text style={ill.miniName}>Jules Etoga</Text>
+          <Text style={ill.miniSub}>« Service rapide et pro »</Text>
+        </View>
+        <Text style={ill.miniStars}>★★★★★</Text>
+      </View>
+    </View>
+  );
+}
+
+function QuotesIllus() {
+  return (
+    <View style={ill.stage2}>
+      <View style={[ill.quote, ill.quoteA]}>
+        <View style={ill.qHead}>
+          <Text style={ill.qName}>Garage Étoile</Text>
+          <View style={ill.qBest}>
+            <Text style={ill.qBestTxt}>MEILLEUR PRIX</Text>
+          </View>
+        </View>
+        <Text style={ill.qPrice}>
+          38 500 <Text style={ill.qUnit}>FCFA</Text>
+        </Text>
+        <Text style={ill.qMeta}>Plaquettes + main d'œuvre · 2 j</Text>
+      </View>
+
+      <View style={[ill.quote, ill.quoteB]}>
+        <Text style={ill.qName}>Auto Service Akwa</Text>
+        <Text style={ill.qPrice}>
+          45 000 <Text style={ill.qUnit}>FCFA</Text>
+        </Text>
+        <Text style={ill.qMeta}>Plaquettes + disque · 3 j</Text>
+      </View>
+
+      <View style={[ill.quote, ill.quoteC]}>
+        <Text style={ill.qName}>Méca+ Bonabéri</Text>
+        <Text style={ill.qPrice}>
+          52 000 <Text style={ill.qUnit}>FCFA</Text>
+        </Text>
+        <Text style={ill.qMeta}>Diagnostic complet · 2 j</Text>
+      </View>
+    </View>
+  );
+}
+
+function TrackingIllus({ lang }: { lang: Lang }) {
+  const steps = [
+    { label: lang === 'fr' ? 'Reçu' : 'Received', state: 'done' as const },
+    { label: 'Diag', state: 'done' as const },
+    { label: lang === 'fr' ? 'Réparation' : 'Repair', state: 'now' as const },
+    { label: lang === 'fr' ? 'Livraison' : 'Pick-up', state: 'upcoming' as const },
+  ];
+  return (
+    <View style={ill.stage3}>
+      <View style={ill.trackCard}>
+        <View style={ill.trackHead}>
+          <Text style={ill.trackLabel}>
+            {lang === 'fr' ? 'RÉPARATION EN COURS' : 'REPAIR IN PROGRESS'}
+          </Text>
+          <Text style={ill.trackPct}>62 %</Text>
+        </View>
+        <View style={ill.trackBar}>
+          <View style={ill.trackBarFill} />
+        </View>
+        <View style={ill.trackSteps}>
+          {steps.map((st) => (
+            <View key={st.label} style={ill.step}>
+              <View
+                style={[
+                  ill.stepDot,
+                  st.state === 'done' && ill.stepDotDone,
+                  st.state === 'now' && ill.stepDotNow,
+                ]}
+              >
+                {st.state === 'done' ? (
+                  <Check size={10} color="#fff" strokeWidth={3} />
+                ) : null}
+              </View>
+              <Text
+                style={[
+                  ill.stepLbl,
+                  (st.state === 'done' || st.state === 'now') && ill.stepLblOn,
+                ]}
+              >
+                {st.label}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <View style={ill.photos}>
+        <View style={[ill.photo, ill.photoBefore]}>
+          <Text style={ill.photoTxt}>AVANT</Text>
+        </View>
+        <View style={[ill.photo, ill.photoNow]}>
+          <Camera
+            size={14}
+            color="#fff"
+            strokeWidth={2}
+            style={ill.photoIcon}
+          />
+          <Text style={ill.photoTxt}>EN COURS</Text>
+        </View>
+        <View style={[ill.photo, ill.photoAfter]}>
+          <Text style={ill.photoTxt}>APRÈS</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const s = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#0A0E15',
+  },
+  haloRed: {
+    position: 'absolute',
+    top: -120,
+    right: -100,
+    width: 360,
+    height: 360,
+    borderRadius: 180,
+    backgroundColor: 'rgba(200,16,46,0.32)',
+    opacity: 0.9,
+  },
+  safe: {
+    flex: 1,
+    paddingHorizontal: 22,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 6,
+    paddingBottom: 4,
+  },
+  langToggle: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 999,
+    padding: 3,
+  },
+  langBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  langBtnOn: {
+    backgroundColor: '#C8102E',
+  },
+  langTxt: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 0.4,
+  },
+  langTxtOn: {
+    color: '#fff',
+  },
+  skipTxt: {
+    color: 'rgba(255,255,255,0.62)',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  stage: {
+    flex: 1.05,
+    minHeight: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  text: {
+    gap: 8,
+    marginBottom: 16,
+  },
+  eyebrow: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.6,
+    color: '#C8102E',
+  },
+  title: {
+    color: '#fff',
+    fontSize: 26,
+    lineHeight: 29,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  desc: {
+    color: 'rgba(255,255,255,0.74)',
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: '400',
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  dots: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+  },
+  dotOn: {
+    width: 22,
+    backgroundColor: '#C8102E',
+  },
+  cta: {
+    paddingHorizontal: 18,
+    minWidth: 140,
+  },
+  altWrap: {
+    alignSelf: 'center',
+    paddingVertical: 10,
+    marginTop: 2,
+  },
+  altTxt: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  altTxtAccent: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+});
+
+const ill = StyleSheet.create({
+  stage1: {
     width: '100%',
-    maxWidth: 280,
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  card1: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 14,
+    width: 240,
+    transform: [{ rotate: '-2deg' }],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 24 },
+    shadowOpacity: 0.45,
+    shadowRadius: 30,
+    elevation: 18,
+    zIndex: 2,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing[3],
+    gap: 10,
+    marginBottom: 10,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    backgroundColor: palette.red[50],
-    justifyContent: 'center',
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: '#EAEDF1',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  meta: { flex: 1, gap: 2 },
+  meta: {
+    flex: 1,
+    minWidth: 0,
+  },
+  name: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1F2937',
+    letterSpacing: -0.1,
+  },
   starRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 2,
   },
-  certBadge: {
-    padding: 4,
-    backgroundColor: palette.red[50],
-    borderRadius: radius.xs,
+  sub: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#3F4A52',
   },
-  tagRow: {
+  stamp: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#C8102E',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#C8102E',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  tags: {
     flexDirection: 'row',
-    gap: spacing[2],
     flexWrap: 'wrap',
+    gap: 6,
   },
   tag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: semantic.successSoft,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: radius.pill,
+    borderRadius: 999,
   },
-  quoteList: {
-    gap: spacing[2],
+  tagOk: {
+    backgroundColor: '#E5F4EC',
+  },
+  tagOkTxt: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#186B3B',
+    letterSpacing: 0.1,
+  },
+  mini: {
+    position: 'absolute',
+    bottom: '6%',
+    right: '4%',
+    width: 200,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    transform: [{ rotate: '4deg' }],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 24,
+    elevation: 12,
+    zIndex: 1,
+    borderWidth: 1,
+    borderColor: 'rgba(15,23,42,0.06)',
+  },
+  miniAv: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#2B6CB0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  miniAvTxt: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  miniMeta: {
+    flex: 1,
+    minWidth: 0,
+  },
+  miniName: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#1F2937',
+  },
+  miniSub: {
+    fontSize: 9.5,
+    fontWeight: '500',
+    color: '#7A828D',
+    marginTop: 1,
+  },
+  miniStars: {
+    color: '#C97A0E',
+    fontSize: 10,
+    letterSpacing: 0.5,
+  },
+
+  stage2: {
     width: '100%',
+    height: '100%',
+    position: 'relative',
+  },
+  quote: {
+    position: 'absolute',
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    width: 220,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.4,
+    shadowRadius: 30,
+    elevation: 14,
+  },
+  quoteA: {
+    top: '4%',
+    left: '4%',
+    transform: [{ rotate: '-3deg' }],
+    borderLeftWidth: 3,
+    borderLeftColor: '#C8102E',
+    zIndex: 3,
+  },
+  quoteB: {
+    top: '36%',
+    right: '2%',
+    transform: [{ rotate: '2.5deg' }],
+    zIndex: 2,
+    opacity: 0.96,
+  },
+  quoteC: {
+    bottom: '4%',
+    left: '8%',
+    transform: [{ rotate: '-1.5deg' }],
+    zIndex: 1,
+    opacity: 0.8,
+  },
+  qHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 4,
+  },
+  qName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1F2937',
+    letterSpacing: -0.05,
+  },
+  qBest: {
+    backgroundColor: '#C8102E',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  qBestTxt: {
+    color: '#fff',
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  qPrice: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#1F2937',
+    letterSpacing: -0.5,
+    lineHeight: 24,
+  },
+  qUnit: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#3F4A52',
+  },
+  qMeta: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#7A828D',
+    marginTop: 4,
+  },
+
+  stage3: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  trackCard: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 14,
+    width: '92%',
+    maxWidth: 280,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.45,
+    shadowRadius: 30,
+    elevation: 14,
+  },
+  trackHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  trackLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#C8102E',
+    letterSpacing: 1.1,
+  },
+  trackPct: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#1F2937',
+    letterSpacing: -0.2,
+  },
+  trackBar: {
+    width: '100%',
+    height: 6,
+    backgroundColor: '#F1F3F5',
+    borderRadius: 999,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  trackBarFill: {
+    height: '100%',
+    width: '62%',
+    backgroundColor: '#C8102E',
+    borderRadius: 999,
+  },
+  trackSteps: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 4,
+  },
+  step: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  stepDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#E4E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepDotDone: {
+    backgroundColor: '#C8102E',
+  },
+  stepDotNow: {
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#C8102E',
+  },
+  stepLbl: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: '#7A828D',
+    letterSpacing: 0.2,
+  },
+  stepLblOn: {
+    color: '#1F2937',
+  },
+
+  photos: {
+    flexDirection: 'row',
+    gap: 8,
+    width: '92%',
     maxWidth: 280,
   },
-  quoteRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: bg.surface,
-    borderRadius: radius.md,
-    padding: spacing[3],
-    borderWidth: 1,
-    borderColor: border.subtle,
+  photo: {
+    flex: 1,
+    height: 64,
+    borderRadius: 10,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+    padding: 6,
   },
-  quoteRowBest: {
-    borderColor: accent.base,
+  photoBefore: {
+    backgroundColor: '#5A4434',
+  },
+  photoNow: {
+    backgroundColor: '#3A4450',
+    transform: [{ scale: 1.05 }],
     borderWidth: 2,
+    borderColor: '#C8102E',
+    zIndex: 2,
   },
-  quoteMeta: { gap: 2 },
-  bestChip: {
-    backgroundColor: palette.red[50],
-    paddingHorizontal: 6,
+  photoAfter: {
+    backgroundColor: '#3A4E42',
+    opacity: 0.75,
+  },
+  photoTxt: {
+    color: '#fff',
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 1.4,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 5,
     paddingVertical: 2,
-    borderRadius: radius.pill,
+    borderRadius: 3,
     alignSelf: 'flex-start',
   },
-  trackList: {
-    width: '100%',
-    maxWidth: 200,
-    gap: 0,
-  },
-  trackRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing[3],
-    paddingVertical: 4,
-  },
-  trackDot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: border.default,
-    backgroundColor: bg.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  trackDotDone: {
-    borderColor: semantic.success,
-    backgroundColor: semantic.success,
-  },
-  trackDotActive: {
-    borderColor: accent.base,
-    backgroundColor: accent.base,
-  },
-  trackLine: {
+  photoIcon: {
     position: 'absolute',
-    left: 9,
-    top: 22,
-    width: 2,
-    height: 20,
-    backgroundColor: border.subtle,
-  },
-  trackLineDone: {
-    backgroundColor: semantic.success,
-  },
-});
-
-const styles = StyleSheet.create({
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[4],
-    paddingBottom: spacing[2],
-  },
-  langToggle: {
-    flexDirection: 'row',
-    backgroundColor: palette.neutral[100],
-    borderRadius: radius.sm,
-    padding: 3,
-    gap: 2,
-  },
-  langBtn: {
-    paddingVertical: spacing[1],
-    paddingHorizontal: spacing[3],
-    borderRadius: 6,
-  },
-  langBtnOn: {
-    backgroundColor: bg.surface,
-  },
-  langText: {
-    fontSize: 12,
-  },
-  stage: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing[5],
-    paddingVertical: spacing[4],
-  },
-  illustBg: {
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.neutral[100],
-    borderRadius: radius.xl,
-    paddingVertical: spacing[6],
-    paddingHorizontal: spacing[4],
-    minHeight: 200,
-  },
-  text: {
-    paddingHorizontal: spacing[5],
-    gap: spacing[2],
-  },
-  eyebrow: {
-    marginBottom: spacing[1],
-  },
-  title: {
-    lineHeight: 36,
-  },
-  desc: {
-    lineHeight: 21,
-    marginTop: spacing[1],
-  },
-  footer: {
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[5],
-    paddingBottom: spacing[6],
-    gap: spacing[3],
-  },
-  dots: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing[2],
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: palette.neutral[300],
-  },
-  dotActive: {
-    width: 24,
-    backgroundColor: accent.base,
-  },
-  cta: {},
-  altRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    top: 6,
+    right: 6,
+    opacity: 0.85,
   },
 });
