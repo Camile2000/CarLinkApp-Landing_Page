@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
-import { router } from 'expo-router';
+import { BackHandler, Pressable, ScrollView, View } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
 import { Wrench } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
 import { garageSignUpSchema } from '@carlink/shared/validators';
@@ -24,6 +24,17 @@ const SPECIALTIES = [
   'Tuning',
 ];
 
+const mapSupabaseError = (code?: string, message?: string): string => {
+  if (code === '23505') return 'Un garage existe déjà pour ce compte.';
+  if (code === '42501' || code === 'PGRST301') {
+    return "Action non autorisée. Vérifiez que votre compte est bien un compte garage.";
+  }
+  if (message?.toLowerCase().includes('network')) {
+    return 'Connexion impossible. Vérifiez votre réseau et réessayez.';
+  }
+  return "Impossible d'enregistrer le garage. Réessayez.";
+};
+
 export default function GarageSetupScreen() {
   const { user } = useAuth();
   const [garageName, setGarageName] = useState('');
@@ -34,6 +45,14 @@ export default function GarageSetupScreen() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Bloque le bouton retour Android : l'utilisateur doit terminer le setup.
+  useFocusEffect(
+    React.useCallback(() => {
+      const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
+      return () => sub.remove();
+    }, [])
+  );
+
   const toggleSpecialty = (spec: string) => {
     setSelectedSpecialties((prev) =>
       prev.includes(spec) ? prev.filter((s) => s !== spec) : [...prev, spec]
@@ -41,6 +60,7 @@ export default function GarageSetupScreen() {
   };
 
   const handleSave = async () => {
+    if (loading) return;
     setErrors({});
 
     if (!user) {
@@ -59,17 +79,21 @@ export default function GarageSetupScreen() {
 
       setLoading(true);
 
+      const neighborhoodValue = data.neighborhood?.trim()
+        ? data.neighborhood.trim()
+        : null;
+
       const { error } = await supabase.from('garages').insert({
         user_id: user.id,
         garage_name: data.garage_name,
         city: data.city,
-        neighborhood: data.neighborhood,
+        neighborhood: neighborhoodValue,
         phone: data.phone,
         specialties: data.specialties,
       });
 
       if (error) {
-        setErrors({ form: error.message });
+        setErrors({ form: mapSupabaseError(error.code, error.message) });
         return;
       }
 
@@ -81,6 +105,8 @@ export default function GarageSetupScreen() {
           if (e.path) next[e.path[0]] = e.message;
         });
         setErrors(next);
+      } else {
+        setErrors({ form: mapSupabaseError() });
       }
     } finally {
       setLoading(false);
@@ -95,7 +121,6 @@ export default function GarageSetupScreen() {
 
   return (
     <AuthLayout
-      onBack={() => router.back()}
       heroIcon={Wrench}
       heroTone="red"
       title="Paramètres de votre garage"

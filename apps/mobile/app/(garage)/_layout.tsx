@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Stack, router } from 'expo-router';
 import { supabase } from '@carlink/shared/supabase/client';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -6,6 +6,7 @@ import { colors } from '../../src/constants/colors';
 
 export default function GarageLayout() {
   const { session, profile, loading } = useAuth();
+  const checkedRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -20,13 +21,21 @@ export default function GarageLayout() {
       return;
     }
 
+    if (checkedRef.current === session.user.id) return;
+
     const checkGarageProfile = async () => {
-      if (!session.user.id) return;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('garages')
         .select('id')
         .eq('user_id', session.user.id)
-        .single();
+        .maybeSingle();
+
+      if (error) {
+        console.warn('[garage layout] check failed', error.message);
+        return;
+      }
+
+      checkedRef.current = session.user.id;
 
       if (!data) {
         router.replace('/(auth)/garage-setup');

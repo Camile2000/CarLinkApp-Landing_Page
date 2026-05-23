@@ -59,6 +59,8 @@ export default function OtpScreen() {
         router.push('/(auth)/new-password');
       } else if (roleStr === 'garage') {
         router.replace('/(auth)/garage-setup');
+      } else {
+        router.replace('/(driver)');
       }
     } catch {
       setError('Code OTP invalide');
