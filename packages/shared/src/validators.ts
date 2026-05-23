@@ -121,6 +121,35 @@ export const garageUpdateSchema = z.object({
   specialties: z.array(z.string().max(100)).max(20).default([]),
 });
 
+// ── Garage sign-up (création du profil pro) ───────────────────────────────────
+
+export const garageSignUpSchema = z.object({
+  garage_name: z.string().min(2, 'Nom du garage requis').max(200),
+  city: z.string().min(2, 'Ville requise').max(100),
+  neighborhood: z.string().max(100).optional(),
+  phone: phoneSchema,
+  specialties: z
+    .array(z.string().max(100))
+    .min(1, 'Au moins une spécialité requise')
+    .max(20),
+});
+
+// ── Document garagiste ────────────────────────────────────────────────────────
+
+export const documentTypeSchema = z.enum([
+  'id_card',
+  'business_registry',
+  'tax_certificate',
+  'garage_photo',
+  'other',
+]);
+
+export const garageDocumentSchema = z.object({
+  garage_id: uuidSchema,
+  doc_type: documentTypeSchema,
+  file_path: z.string().min(1).max(500),
+});
+
 // ── Types inférés (utilisables directement dans le code) ─────────────────────
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
@@ -134,3 +163,6 @@ export type QuoteInput = z.infer<typeof quoteSchema>;
 export type MessageInput = z.infer<typeof messageSchema>;
 export type ReviewInput = z.infer<typeof reviewSchema>;
 export type GarageUpdateInput = z.infer<typeof garageUpdateSchema>;
+export type GarageSignUpInput = z.infer<typeof garageSignUpSchema>;
+export type DocumentType = z.infer<typeof documentTypeSchema>;
+export type GarageDocumentInput = z.infer<typeof garageDocumentSchema>;
