@@ -13,7 +13,7 @@ import { accent, fg, semantic } from '../../src/constants/theme';
 type OtpType = 'signup' | 'recovery';
 
 export default function OtpScreen() {
-  const { email, type = 'signup' } = useLocalSearchParams();
+  const { email, type = 'signup', role } = useLocalSearchParams();
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -22,6 +22,7 @@ export default function OtpScreen() {
 
   const emailStr = Array.isArray(email) ? email[0] : (email ?? '');
   const otpType = Array.isArray(type) ? type[0] : type;
+  const roleStr = Array.isArray(role) ? role[0] : role;
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -56,8 +57,8 @@ export default function OtpScreen() {
 
       if (otpType === 'recovery') {
         router.push('/(auth)/new-password');
-      } else {
-        router.replace('/(tabs)');
+      } else if (roleStr === 'garage') {
+        router.replace('/(auth)/garage-setup');
       }
     } catch {
       setError('Code OTP invalide');

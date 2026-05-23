@@ -60,7 +60,7 @@ export default function SignUpScreen() {
 
       router.push({
         pathname: '/(auth)/otp',
-        params: { email, type: 'signup' },
+        params: { email, type: 'signup', role: selectedRole },
       });
     } catch (err: unknown) {
       if (err instanceof Error && 'errors' in err && Array.isArray(err.errors)) {
