@@ -6,6 +6,9 @@ export type AppLanguage = 'fr' | 'en';
 export type RequestUrgency = 'low' | 'medium' | 'high';
 export type RequestStatus = 'pending' | 'quoted' | 'accepted' | 'in_progress' | 'completed' | 'declined';
 export type PaymentStatus = 'pending' | 'paid';
+export type DocumentType = 'id_card' | 'business_registry' | 'tax_certificate' | 'garage_photo' | 'other';
+export type DocumentStatus = 'pending' | 'approved' | 'rejected';
+export type CertificationAction = 'submitted' | 'approved' | 'rejected' | 'revoked';
 
 // ---- public.users (table réelle, accès restreint) ----
 export interface User {
@@ -143,6 +146,30 @@ export interface AppNotification {
   created_at: string;
 }
 
+// ---- public.garage_documents ----
+export interface GarageDocument {
+  id: string;
+  garage_id: string;
+  uploaded_by: string;
+  doc_type: DocumentType;
+  file_path: string;
+  status: DocumentStatus;
+  reject_reason: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+}
+
+// ---- public.garage_certification_audit ----
+export interface GarageCertificationAudit {
+  id: string;
+  garage_id: string;
+  action: CertificationAction;
+  reason: string | null;
+  performed_by: string | null;
+  created_at: string;
+}
+
 // ---- Aggregated Database type pour supabase-js client ----
 export interface Database {
   public: {
@@ -192,6 +219,16 @@ export interface Database {
         Insert: Omit<AppNotification, 'id' | 'created_at' | 'read'>;
         Update: Partial<Omit<AppNotification, 'id' | 'created_at' | 'user_id'>>;
       };
+      garage_documents: {
+        Row: GarageDocument;
+        Insert: Omit<GarageDocument, 'id' | 'created_at' | 'reviewed_by' | 'reviewed_at' | 'reject_reason'>;
+        Update: Partial<Pick<GarageDocument, 'status' | 'reject_reason' | 'reviewed_by' | 'reviewed_at'>>;
+      };
+      garage_certification_audit: {
+        Row: GarageCertificationAudit;
+        Insert: Omit<GarageCertificationAudit, 'id' | 'created_at'>;
+        Update: never;
+      };
     };
     Views: {
       user_profiles: {
@@ -214,6 +251,9 @@ export interface Database {
       request_urgency: RequestUrgency;
       request_status: RequestStatus;
       payment_status: PaymentStatus;
+      document_type: DocumentType;
+      document_status: DocumentStatus;
+      certification_action: CertificationAction;
     };
   };
 }

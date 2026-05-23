@@ -164,5 +164,4 @@ export type MessageInput = z.infer<typeof messageSchema>;
 export type ReviewInput = z.infer<typeof reviewSchema>;
 export type GarageUpdateInput = z.infer<typeof garageUpdateSchema>;
 export type GarageSignUpInput = z.infer<typeof garageSignUpSchema>;
-export type DocumentType = z.infer<typeof documentTypeSchema>;
 export type GarageDocumentInput = z.infer<typeof garageDocumentSchema>;
