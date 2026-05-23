@@ -73,12 +73,12 @@ export default function OnboardingScreen() {
     if (!isLast) {
       setIndex(index + 1);
     } else {
-      router.push('/(auth)/signup');
+      router.push('/(auth)/role-choice');
     }
   };
 
   const goSignIn = () => router.push('/(auth)/signin');
-  const skip = () => router.push('/(auth)/signup');
+  const skip = () => router.push('/(auth)/role-choice');
 
   const ctaLabel = isLast
     ? lang === 'fr'

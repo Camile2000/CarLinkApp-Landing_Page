@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { UserPlus } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
 import { signUpWithPasswordSchema } from '@carlink/shared/validators';
@@ -11,6 +11,7 @@ import { BodySm } from '../../src/components/ui/Typography';
 import { accent, fg } from '../../src/constants/theme';
 
 export default function SignUpScreen() {
+  const { selectedRole } = useLocalSearchParams<{ selectedRole: string }>();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,12 +21,17 @@ export default function SignUpScreen() {
   const handleSignUp = async () => {
     setErrors({});
 
+    if (!selectedRole) {
+      setErrors({ form: 'Veuillez sélectionner un rôle' });
+      return;
+    }
+
     try {
       const data = signUpWithPasswordSchema.parse({
         full_name: fullName,
         email,
         password,
-        role: 'conductor',
+        role: selectedRole,
         language: 'fr',
       });
 
