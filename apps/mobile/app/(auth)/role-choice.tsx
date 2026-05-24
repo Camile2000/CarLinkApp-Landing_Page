@@ -5,36 +5,36 @@ import {
   Text,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Users, Wrench } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, Car, Check, Wrench } from 'lucide-react-native';
 import { Button } from '../../src/components/ui/Button';
-import { BodySm } from '../../src/components/ui/Typography';
 
 type Role = 'conductor' | 'garage';
 
 interface RoleOption {
   id: Role;
+  eyebrow: string;
   label: string;
   description: string;
-  icon: typeof Users;
-  emoji: string;
+  icon: typeof Car;
 }
 
 const ROLES: RoleOption[] = [
   {
     id: 'conductor',
+    eyebrow: 'JE CHERCHE UN GARAGE',
     label: 'Conducteur',
-    description: 'Trouvez des garages de confiance et comparez les devis',
-    icon: Users,
-    emoji: '👤',
+    description: 'Comparez les devis, suivez la réparation et payez en toute confiance.',
+    icon: Car,
   },
   {
     id: 'garage',
+    eyebrow: 'JE SUIS PROFESSIONNEL',
     label: 'Garagiste',
-    description: 'Gérez vos demandes de réparation et vos clients',
+    description: 'Recevez des demandes qualifiées, envoyez vos devis et fidélisez vos clients.',
     icon: Wrench,
-    emoji: '🔧',
   },
 ];
 
@@ -52,49 +52,91 @@ export default function RoleChoiceScreen() {
   };
 
   return (
-    <View style={[s.root, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      <View style={s.header}>
-        <Text style={s.title}>Quel est votre rôle ?</Text>
-        <Text style={s.subtitle}>Choisissez pour continuer</Text>
-      </View>
+    <View style={s.root}>
+      <LinearGradient
+        colors={['#1F2937', '#0A0E15', '#0A0E15']}
+        locations={[0, 0.6, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+      <View style={s.haloRed} />
 
-      <View style={s.cardsContainer}>
-        {ROLES.map((role) => (
-          <Pressable
-            key={role.id}
-            onPress={() => setSelected(role.id)}
-            style={({ pressed }) => [
-              s.card,
-              selected === role.id && s.cardSelected,
-              pressed && s.cardPressed,
-            ]}
-          >
-            <View style={s.cardContent}>
-              <View style={s.iconWrap}>
-                <Text style={s.emoji}>{role.emoji}</Text>
-              </View>
-              <Text style={s.label}>{role.label}</Text>
-              <Text style={s.description}>{role.description}</Text>
-            </View>
-            {selected === role.id && (
-              <View style={s.checkmark}>
-                <View style={s.checkmarkInner} />
-              </View>
-            )}
+      <View
+        style={[
+          s.safe,
+          { paddingTop: insets.top + 6, paddingBottom: insets.bottom + 12 },
+        ]}
+      >
+        <View style={s.topBar}>
+          <Pressable onPress={() => router.back()} hitSlop={8} style={s.backIcon}>
+            <ArrowLeft size={20} color="rgba(255,255,255,0.7)" strokeWidth={2.2} />
           </Pressable>
-        ))}
-      </View>
+        </View>
 
-      <View style={s.footer}>
-        <Button
-          label="Continuer"
-          onPress={handleContinue}
-          disabled={!selected}
-          fullWidth
-        />
-        <Pressable onPress={() => router.back()} hitSlop={8} style={s.backBtn}>
-          <BodySm color="rgba(255,255,255,0.55)">Retour</BodySm>
-        </Pressable>
+        <View style={s.header}>
+          <Text style={s.eyebrow}>BIENVENUE SUR CARLINK</Text>
+          <Text style={s.title}>
+            Vous êtes{'\n'}conducteur ou garagiste ?
+          </Text>
+          <Text style={s.subtitle}>
+            On adapte l'expérience à votre profil dès la première seconde.
+          </Text>
+        </View>
+
+        <View style={s.cardsContainer}>
+          {ROLES.map((role) => {
+            const Icon = role.icon;
+            const isSelected = selected === role.id;
+            return (
+              <Pressable
+                key={role.id}
+                onPress={() => setSelected(role.id)}
+                style={({ pressed }) => [
+                  s.card,
+                  isSelected && s.cardSelected,
+                  pressed && s.cardPressed,
+                ]}
+              >
+                <View style={[s.iconWrap, isSelected && s.iconWrapSelected]}>
+                  <Icon
+                    size={22}
+                    color={isSelected ? '#fff' : '#C8102E'}
+                    strokeWidth={2.2}
+                  />
+                </View>
+                <View style={s.cardBody}>
+                  <Text style={s.cardEyebrow}>{role.eyebrow}</Text>
+                  <Text style={s.cardLabel}>{role.label}</Text>
+                  <Text style={s.cardDesc}>{role.description}</Text>
+                </View>
+                <View style={[s.radio, isSelected && s.radioSelected]}>
+                  {isSelected ? (
+                    <Check size={14} color="#fff" strokeWidth={3} />
+                  ) : null}
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={s.footer}>
+          <Button
+            label="Continuer"
+            onPress={handleContinue}
+            disabled={!selected}
+            trailingIcon={ArrowRight}
+            fullWidth
+          />
+          <Pressable
+            onPress={() => router.push('/(auth)/signin')}
+            hitSlop={8}
+            style={s.altWrap}
+          >
+            <Text style={s.altTxt}>
+              Déjà un compte ?{' '}
+              <Text style={s.altTxtAccent}>Se connecter</Text>
+            </Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -104,97 +146,145 @@ const s = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: '#0A0E15',
-    paddingHorizontal: 20,
   },
-  header: {
-    paddingVertical: 28,
-    paddingBottom: 36,
+  haloRed: {
+    position: 'absolute',
+    top: -120,
+    right: -100,
+    width: 360,
+    height: 360,
+    borderRadius: 180,
+    backgroundColor: 'rgba(200,16,46,0.32)',
+    opacity: 0.9,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    lineHeight: 32,
-    letterSpacing: -0.5,
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.55)',
-    fontWeight: '500',
-  },
-  cardsContainer: {
+  safe: {
     flex: 1,
-    gap: 16,
-    marginBottom: 20,
+    paddingHorizontal: 22,
   },
-  card: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.1)',
-    justifyContent: 'center',
-  },
-  cardPressed: {
-    opacity: 0.8,
-  },
-  cardSelected: {
-    backgroundColor: 'rgba(200,16,46,0.12)',
-    borderColor: '#C8102E',
-  },
-  cardContent: {
+  topBar: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    paddingTop: 6,
+    paddingBottom: 4,
   },
-  iconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  backIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emoji: {
-    fontSize: 28,
+  header: {
+    marginTop: 12,
+    marginBottom: 24,
+    gap: 8,
   },
-  label: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    letterSpacing: -0.2,
+  eyebrow: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.6,
+    color: '#C8102E',
   },
-  description: {
+  title: {
+    color: '#fff',
+    fontSize: 26,
+    lineHeight: 30,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    color: 'rgba(255,255,255,0.65)',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.62)',
-    textAlign: 'center',
-    lineHeight: 18,
-    fontWeight: '500',
+    lineHeight: 19,
+    fontWeight: '400',
+    marginTop: 2,
   },
-  checkmark: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    width: 24,
-    height: 24,
+  cardsContainer: {
+    flex: 1,
+    gap: 12,
+  },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  cardPressed: {
+    opacity: 0.85,
+  },
+  cardSelected: {
+    backgroundColor: 'rgba(200,16,46,0.10)',
+    borderColor: '#C8102E',
+  },
+  iconWrap: {
+    width: 44,
+    height: 44,
     borderRadius: 12,
-    backgroundColor: '#C8102E',
+    backgroundColor: 'rgba(200,16,46,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkmarkInner: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#fff',
+  iconWrapSelected: {
+    backgroundColor: '#C8102E',
+  },
+  cardBody: {
+    flex: 1,
+    gap: 2,
+  },
+  cardEyebrow: {
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    color: 'rgba(255,255,255,0.5)',
+    marginBottom: 2,
+  },
+  cardLabel: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: -0.2,
+  },
+  cardDesc: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.62)',
+    lineHeight: 17,
+    fontWeight: '400',
+    marginTop: 2,
+  },
+  radio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioSelected: {
+    backgroundColor: '#C8102E',
+    borderColor: '#C8102E',
   },
   footer: {
-    gap: 12,
-    paddingBottom: 20,
+    gap: 4,
+    marginTop: 16,
   },
-  backBtn: {
-    alignItems: 'center',
-    paddingVertical: 10,
+  altWrap: {
+    alignSelf: 'center',
+    paddingVertical: 12,
+  },
+  altTxt: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  altTxtAccent: {
+    color: '#fff',
+    fontWeight: '700',
   },
 });

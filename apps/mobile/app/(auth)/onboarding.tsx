@@ -1,5 +1,10 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
+  Dimensions,
+  FlatList,
+  Image,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
   StyleSheet,
   Text,
@@ -61,23 +66,53 @@ const SLIDES: SlideText[] = [
   },
 ];
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 export default function OnboardingScreen() {
   const [index, setIndex] = useState(0);
   const [lang, setLang] = useState<Lang>('fr');
   const insets = useSafeAreaInsets();
+  const listRef = useRef<FlatList<SlideText>>(null);
 
-  const slide = SLIDES[index];
   const isLast = index === SLIDES.length - 1;
 
   const goNext = () => {
     if (!isLast) {
-      setIndex(index + 1);
+      const next = index + 1;
+      listRef.current?.scrollToIndex({ index: next, animated: true });
+      setIndex(next);
     } else {
       router.push('/(auth)/role-choice');
     }
   };
 
-  const goSignIn = () => router.push('/(auth)/signin');
+  const onMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const newIndex = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+    if (newIndex !== index) setIndex(newIndex);
+  };
+
+  const renderSlide = ({ item, index: i }: { item: SlideText; index: number }) => (
+    <View style={[s.page, { width: SCREEN_WIDTH }]}>
+      <View style={s.stage}>
+        {i === 0 ? <GarageIllus /> : null}
+        {i === 1 ? <QuotesIllus /> : null}
+        {i === 2 ? <TrackingIllus lang={lang} /> : null}
+      </View>
+      <View style={s.text}>
+        <Text style={s.eyebrow}>
+          {lang === 'fr' ? item.eyebrow.fr : item.eyebrow.en}
+        </Text>
+        <Text style={s.title}>
+          {lang === 'fr' ? item.title.fr : item.title.en}
+        </Text>
+        <Text style={s.desc}>
+          {lang === 'fr' ? item.desc.fr : item.desc.en}
+        </Text>
+      </View>
+    </View>
+  );
+
+  const goSignIn = () => router.push('/(auth)/role-choice');
   const skip = () => router.push('/(auth)/role-choice');
 
   const ctaLabel = isLast
@@ -131,23 +166,23 @@ export default function OnboardingScreen() {
           </Pressable>
         </View>
 
-        <View style={s.stage}>
-          {index === 0 ? <GarageIllus /> : null}
-          {index === 1 ? <QuotesIllus /> : null}
-          {index === 2 ? <TrackingIllus lang={lang} /> : null}
-        </View>
-
-        <View style={s.text}>
-          <Text style={s.eyebrow}>
-            {lang === 'fr' ? slide.eyebrow.fr : slide.eyebrow.en}
-          </Text>
-          <Text style={s.title}>
-            {lang === 'fr' ? slide.title.fr : slide.title.en}
-          </Text>
-          <Text style={s.desc}>
-            {lang === 'fr' ? slide.desc.fr : slide.desc.en}
-          </Text>
-        </View>
+        <FlatList
+          ref={listRef}
+          data={SLIDES}
+          renderItem={renderSlide}
+          keyExtractor={(_, i) => `slide-${i}`}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={onMomentumEnd}
+          scrollEventThrottle={16}
+          getItemLayout={(_, i) => ({
+            length: SCREEN_WIDTH,
+            offset: SCREEN_WIDTH * i,
+            index: i,
+          })}
+          style={s.list}
+        />
 
         <View style={s.footer}>
           <View style={s.dots}>
@@ -171,16 +206,7 @@ export default function OnboardingScreen() {
           <Pressable onPress={goSignIn} hitSlop={8} style={s.altWrap}>
             <Text style={s.altTxt}>{altLabel}</Text>
           </Pressable>
-        ) : (
-          <Pressable onPress={goSignIn} hitSlop={8} style={s.altWrap}>
-            <Text style={s.altTxt}>
-              {lang === 'fr' ? 'Déjà un compte ? ' : 'Already have an account? '}
-              <Text style={s.altTxtAccent}>
-                {lang === 'fr' ? 'Se connecter' : 'Sign in'}
-              </Text>
-            </Text>
-          </Pressable>
-        )}
+        ) : null}
       </View>
     </View>
   );
@@ -316,9 +342,19 @@ function TrackingIllus({ lang }: { lang: Lang }) {
 
       <View style={ill.photos}>
         <View style={[ill.photo, ill.photoBefore]}>
+          <Image
+            source={{ uri: 'https://i.pinimg.com/736x/e2/d2/ac/e2d2ac66983e34260dcfb2ab86e0d8d1.jpg' }}
+            style={ill.photoImg}
+            resizeMode="cover"
+          />
           <Text style={ill.photoTxt}>AVANT</Text>
         </View>
         <View style={[ill.photo, ill.photoNow]}>
+          <Image
+            source={{ uri: 'https://i.pinimg.com/736x/46/88/38/468838ed64e43b945aab1ff701f2763a.jpg' }}
+            style={ill.photoImg}
+            resizeMode="cover"
+          />
           <Camera
             size={14}
             color="#fff"
@@ -328,6 +364,11 @@ function TrackingIllus({ lang }: { lang: Lang }) {
           <Text style={ill.photoTxt}>EN COURS</Text>
         </View>
         <View style={[ill.photo, ill.photoAfter]}>
+          <Image
+            source={{ uri: 'https://i.pinimg.com/1200x/1b/0b/3f/1b0b3ff4e2de85fa1936e94a579f7249.jpg' }}
+            style={ill.photoImg}
+            resizeMode="cover"
+          />
           <Text style={ill.photoTxt}>APRÈS</Text>
         </View>
       </View>
@@ -352,7 +393,6 @@ const s = StyleSheet.create({
   },
   safe: {
     flex: 1,
-    paddingHorizontal: 22,
   },
   topBar: {
     flexDirection: 'row',
@@ -360,6 +400,14 @@ const s = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 6,
     paddingBottom: 4,
+    paddingHorizontal: 22,
+  },
+  list: {
+    flex: 1,
+  },
+  page: {
+    flex: 1,
+    paddingHorizontal: 22,
   },
   langToggle: {
     flexDirection: 'row',
@@ -424,6 +472,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
+    paddingHorizontal: 22,
   },
   dots: {
     flexDirection: 'row',
@@ -820,5 +869,10 @@ const ill = StyleSheet.create({
     top: 6,
     right: 6,
     opacity: 0.85,
+  },
+  photoImg: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
   },
 });
