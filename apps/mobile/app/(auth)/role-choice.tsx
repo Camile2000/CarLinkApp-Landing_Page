@@ -106,6 +106,11 @@ export default function RoleChoiceScreen() {
                     <Text style={s.badgeTxt}>RECOMMANDÉ</Text>
                   </View>
                 )}
+                <View style={[s.radio, isSelected && s.radioSelected, role.recommended && s.radioWithBadge]}>
+                  {isSelected ? (
+                    <Check size={14} color="#fff" strokeWidth={3} />
+                  ) : null}
+                </View>
                 <View style={[s.iconWrap, isSelected && s.iconWrapSelected]}>
                   <Icon
                     size={22}
@@ -125,11 +130,6 @@ export default function RoleChoiceScreen() {
                       </View>
                     ))}
                   </View>
-                </View>
-                <View style={[s.radio, isSelected && s.radioSelected]}>
-                  {isSelected ? (
-                    <Check size={14} color="#fff" strokeWidth={3} />
-                  ) : null}
                 </View>
               </Pressable>
             );
@@ -255,6 +255,7 @@ const s = StyleSheet.create({
   cardBody: {
     flex: 1,
     gap: 2,
+    paddingRight: 32,
   },
   cardEyebrow: {
     fontSize: 9,
@@ -277,6 +278,9 @@ const s = StyleSheet.create({
     marginTop: 2,
   },
   radio: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
     width: 22,
     height: 22,
     borderRadius: 11,
@@ -284,6 +288,10 @@ const s = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 5,
+  },
+  radioWithBadge: {
+    top: 48,
   },
   radioSelected: {
     backgroundColor: '#C8102E',

@@ -184,7 +184,7 @@ export default function OnboardingScreen() {
           style={s.list}
         />
 
-        <View style={s.footer}>
+        <View style={[s.footer, isLast && s.footerLast]}>
           <View style={s.dots}>
             {SLIDES.map((_, i) => (
               <View
@@ -198,7 +198,8 @@ export default function OnboardingScreen() {
             onPress={goNext}
             size="md"
             trailingIcon={ArrowRight}
-            style={s.cta}
+            style={isLast ? s.ctaLast : s.cta}
+            fullWidth={isLast}
           />
         </View>
 
@@ -470,9 +471,15 @@ const s = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16,
+    justifyContent: 'space-between',
+    gap: 12,
     paddingHorizontal: 22,
+  },
+  footerLast: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 14,
   },
   dots: {
     flexDirection: 'row',
@@ -491,6 +498,11 @@ const s = StyleSheet.create({
   cta: {
     paddingHorizontal: 18,
     minWidth: 140,
+  },
+  ctaLast: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    width: '100%',
   },
   altWrap: {
     alignSelf: 'center',
@@ -827,14 +839,14 @@ const ill = StyleSheet.create({
 
   photos: {
     flexDirection: 'row',
-    gap: 8,
-    width: '92%',
-    maxWidth: 280,
+    gap: 10,
+    width: '94%',
+    maxWidth: 320,
   },
   photo: {
     flex: 1,
-    height: 76,
-    borderRadius: 10,
+    aspectRatio: 0.85,
+    borderRadius: 12,
     overflow: 'hidden',
     justifyContent: 'flex-end',
     padding: 6,
