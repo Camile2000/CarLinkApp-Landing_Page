@@ -19,6 +19,8 @@ interface RoleOption {
   label: string;
   description: string;
   icon: typeof Car;
+  points: string[];
+  recommended?: boolean;
 }
 
 const ROLES: RoleOption[] = [
@@ -28,6 +30,8 @@ const ROLES: RoleOption[] = [
     label: 'Conducteur',
     description: 'Comparez les devis, suivez la réparation et payez en toute confiance.',
     icon: Car,
+    points: ['Garages vérifiés', 'Devis comparés', 'Suivi photo en temps réel'],
+    recommended: true,
   },
   {
     id: 'garage',
@@ -35,6 +39,7 @@ const ROLES: RoleOption[] = [
     label: 'Garagiste',
     description: 'Recevez des demandes qualifiées, envoyez vos devis et fidélisez vos clients.',
     icon: Wrench,
+    points: ['Demandes ciblées', 'Profil certifié', 'Outils de gestion'],
   },
 ];
 
@@ -96,6 +101,11 @@ export default function RoleChoiceScreen() {
                   pressed && s.cardPressed,
                 ]}
               >
+                {role.recommended && (
+                  <View style={s.badge}>
+                    <Text style={s.badgeTxt}>RECOMMANDÉ</Text>
+                  </View>
+                )}
                 <View style={[s.iconWrap, isSelected && s.iconWrapSelected]}>
                   <Icon
                     size={22}
@@ -107,6 +117,14 @@ export default function RoleChoiceScreen() {
                   <Text style={s.cardEyebrow}>{role.eyebrow}</Text>
                   <Text style={s.cardLabel}>{role.label}</Text>
                   <Text style={s.cardDesc}>{role.description}</Text>
+                  <View style={s.pointsList}>
+                    {role.points.map((point, idx) => (
+                      <View key={idx} style={s.pointRow}>
+                        <Check size={14} color="#C8102E" strokeWidth={2.5} />
+                        <Text style={s.pointTxt}>{point}</Text>
+                      </View>
+                    ))}
+                  </View>
                 </View>
                 <View style={[s.radio, isSelected && s.radioSelected]}>
                   {isSelected ? (
@@ -206,7 +224,7 @@ const s = StyleSheet.create({
   },
   card: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 14,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 16,
@@ -214,6 +232,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 16,
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.08)',
+    position: 'relative',
   },
   cardPressed: {
     opacity: 0.85,
@@ -286,5 +305,36 @@ const s = StyleSheet.create({
   altTxtAccent: {
     color: '#fff',
     fontWeight: '700',
+  },
+  badge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: '#C8102E',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+    zIndex: 10,
+  },
+  badgeTxt: {
+    color: '#fff',
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+  },
+  pointsList: {
+    marginTop: 10,
+    gap: 6,
+  },
+  pointRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pointTxt: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.85)',
+    letterSpacing: -0.05,
   },
 });

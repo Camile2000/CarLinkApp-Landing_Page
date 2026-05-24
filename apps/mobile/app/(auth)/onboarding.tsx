@@ -470,8 +470,8 @@ const s = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
+    justifyContent: 'center',
+    gap: 16,
     paddingHorizontal: 22,
   },
   dots: {
@@ -833,7 +833,7 @@ const ill = StyleSheet.create({
   },
   photo: {
     flex: 1,
-    height: 64,
+    height: 76,
     borderRadius: 10,
     overflow: 'hidden',
     justifyContent: 'flex-end',
@@ -871,7 +871,6 @@ const ill = StyleSheet.create({
     opacity: 0.85,
   },
   photoImg: {
-    ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
   },
