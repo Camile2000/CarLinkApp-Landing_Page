@@ -77,7 +77,7 @@ export default function OnboardingScreen() {
     }
   };
 
-  const goSignIn = () => router.push('/(auth)/role-choice');
+  const goSignIn = () => router.push('/(auth)/signin');
   const skip = () => router.push('/(auth)/role-choice');
 
   const ctaLabel = isLast
