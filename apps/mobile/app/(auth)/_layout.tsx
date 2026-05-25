@@ -9,9 +9,11 @@ export default function AuthLayout() {
         contentStyle: {
           backgroundColor: colors.navyDeep,
         },
+        animationEnabled: false,
       }}
+      initialRouteName="splash"
     >
-      <Stack.Screen name="splash" />
+      <Stack.Screen name="splash" options={{ gestureEnabled: false }} />
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="role-choice" />
       <Stack.Screen name="signup-conductor" />
