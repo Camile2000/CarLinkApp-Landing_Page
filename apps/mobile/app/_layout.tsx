@@ -47,7 +47,7 @@ function RootLayoutContent() {
   if (loading) return null;
 
   return (
-    <Stack screenOptions={{ headerShown: false, animationEnabled: false }}>
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" options={{ gestureEnabled: false }} />
       <Stack.Screen name="(driver)" />
       <Stack.Screen name="(garage)" />

@@ -9,7 +9,6 @@ export default function AuthLayout() {
         contentStyle: {
           backgroundColor: colors.navyDeep,
         },
-        animationEnabled: false,
       }}
       initialRouteName="splash"
     >
