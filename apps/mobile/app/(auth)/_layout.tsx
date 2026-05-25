@@ -19,6 +19,8 @@ export default function AuthLayout() {
       <Stack.Screen name="signup-conductor" />
       <Stack.Screen name="signup-garage" />
       <Stack.Screen name="signin" />
+      <Stack.Screen name="signin-conductor" />
+      <Stack.Screen name="signin-garage" />
       <Stack.Screen name="forgot-password" />
       <Stack.Screen name="otp" />
       <Stack.Screen name="new-password" />
