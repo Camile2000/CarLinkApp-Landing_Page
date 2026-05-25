@@ -83,6 +83,7 @@ export default function SignInGarageScreen() {
         error={errors.password}
       />
 
+<<<<<<< HEAD
       <Pressable onPress={() => router.replace({ pathname: '/(auth)/forgot-password', params: { role: 'garage' } })} hitSlop={8}>
         <BodySm color={accent.base} weight="600" style={{ marginBottom: 16 }}>
           Mot de passe oublié ?
