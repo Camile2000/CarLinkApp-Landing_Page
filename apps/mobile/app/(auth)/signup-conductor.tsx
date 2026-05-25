@@ -164,7 +164,7 @@ export default function SignUpConductorScreen() {
 
       <View style={authStyles.altRow}>
         <BodySm color={fg.muted}>Déjà un compte ?</BodySm>
-        <Pressable onPress={() => router.push('/(auth)/signin-conductor')} hitSlop={8}>
+        <Pressable onPress={() => router.replace('/(auth)/signin-conductor')} hitSlop={8}>
           <BodySm color={accent.base} weight="600"> Se connecter</BodySm>
         </Pressable>
       </View>
