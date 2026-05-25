@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Mail } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
 import { emailSchema } from '@carlink/shared/validators';
@@ -10,6 +10,7 @@ import { Caption } from '../../src/components/ui/Typography';
 import { fg } from '../../src/constants/theme';
 
 export default function ForgotPasswordScreen() {
+  const { role } = useLocalSearchParams<{ role?: string }>();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -49,7 +50,7 @@ export default function ForgotPasswordScreen() {
 
   return (
     <AuthLayout
-      onBack={() => router.back()}
+      onBack={() => router.replace(role === 'garage' ? '/(auth)/signin-garage' : '/(auth)/signin-conductor')}
       heroIcon={Mail}
       heroTone="red"
       title="Mot de passe oublié ?"

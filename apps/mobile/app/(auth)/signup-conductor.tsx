@@ -79,7 +79,7 @@ export default function SignUpConductorScreen() {
 
   return (
     <AuthLayout
-      onBack={() => router.back()}
+      onBack={() => router.replace('/(auth)/signin-conductor')}
       heroIcon={Car}
       heroTone="red"
       eyebrow="COMPTE CONDUCTEUR"
