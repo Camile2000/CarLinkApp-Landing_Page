@@ -51,7 +51,7 @@ export default function SignInConductorScreen() {
 
   return (
     <AuthLayout
-      onBack={() => router.back()}
+      onBack={() => router.replace('/(auth)/role-choice')}
       heroIcon={Car}
       heroTone="red"
       title="Se connecter"
@@ -83,7 +83,7 @@ export default function SignInConductorScreen() {
         error={errors.password}
       />
 
-      <Pressable onPress={() => router.replace('/(auth)/forgot-password')} hitSlop={8}>
+      <Pressable onPress={() => router.replace({ pathname: '/(auth)/forgot-password', params: { role: 'conductor' } })} hitSlop={8}>
         <BodySm color={accent.base} weight="600" style={{ marginBottom: 16 }}>
           Mot de passe oublié ?
         </BodySm>
