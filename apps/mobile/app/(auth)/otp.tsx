@@ -1,234 +1,208 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
+import { MailCheck } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
 import { otpSchema } from '@carlink/shared/validators';
-import { colors, spacing } from '../../src/constants/colors';
+import { AuthLayout, authStyles } from '../../src/components/ui/AuthLayout';
 import { OtpInput } from '../../src/components/ui/OtpInput';
 import { Button } from '../../src/components/ui/Button';
+import { BodySm, Caption } from '../../src/components/ui/Typography';
+import { accent, fg, semantic } from '../../src/constants/theme';
 
 type OtpType = 'signup' | 'recovery';
 
 export default function OtpScreen() {
-  const { email, type = 'signup' } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const { email, type = 'signup', role } = params;
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(0);
+  const [cooldown, setCooldown] = useState(0);
   const [error, setError] = useState('');
 
-  const emailString = Array.isArray(email) ? email[0] : email;
+  const emailStr = Array.isArray(email) ? email[0] : (email ?? '');
   const otpType = Array.isArray(type) ? type[0] : type;
+  const roleStr = Array.isArray(role) ? role[0] : role;
 
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | undefined;
-    if (resendCooldown > 0) {
-      interval = setInterval(() => {
-        setResendCooldown((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [resendCooldown]);
-
-  const maskEmail = (email: string) => {
-    const [localPart, domain] = email.split('@');
-    if (localPart.length <= 2) {
-      return `${localPart}***@${domain}`;
-    }
-    return `${localPart[0]}${localPart[1]}***@${domain}`;
+  const pickStr = (key: string): string => {
+    const v = params[key];
+    if (Array.isArray(v)) return v[0] ?? '';
+    return v ?? '';
   };
 
-  const handleVerifyOtp = async () => {
-    setError('');
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setInterval(() => setCooldown((p) => p - 1), 1000);
+    return () => clearInterval(t);
+  }, [cooldown]);
 
+  const maskEmail = (e: string) => {
+    const [local, domain] = e.split('@');
+    if (!domain) return e;
+    const visible = local.slice(0, 2);
+    return `${visible}***@${domain}`;
+  };
+
+  const handleVerify = async () => {
+    setError('');
     try {
       otpSchema.parse(otp);
-
-      if (!emailString) {
-        Alert.alert('Erreur', 'Email manquant');
-        return;
-      }
-
+      if (!emailStr) return;
       setLoading(true);
 
-      const { error } = await supabase.auth.verifyOtp({
-        email: emailString,
+      const { error: err } = await supabase.auth.verifyOtp({
+        email: emailStr,
         token: otp,
         type: otpType as OtpType,
       });
 
-      if (error) {
+      if (err) {
         setError('Code incorrect. Veuillez réessayer.');
         return;
       }
 
       if (otpType === 'recovery') {
         router.push('/(auth)/new-password');
-      } else {
-        router.replace('/(tabs)');
+        return;
       }
-    } catch (_error: unknown) {
+
+      if (roleStr === 'garage') {
+        // L'utilisateur garage a saisi toutes ses infos au signup-garage.
+        // Après vérification OTP, on insère la ligne garages liée à son user_id.
+        const { data: sessionData } = await supabase.auth.getSession();
+        const userId = sessionData.session?.user.id;
+        if (!userId) {
+          setError('Session invalide après vérification. Veuillez vous reconnecter.');
+          return;
+        }
+
+        let parsedSpecialties: string[] = [];
+        try {
+          parsedSpecialties = JSON.parse(pickStr('specialties') || '[]');
+        } catch {
+          parsedSpecialties = [];
+        }
+
+        const neighborhoodValue = pickStr('neighborhood').trim() || null;
+        const addressValue = pickStr('address').trim() || null;
+
+        const { error: insertError } = await supabase.from('garages').insert({
+          user_id: userId,
+          garage_name: pickStr('garage_name'),
+          city: pickStr('city'),
+          neighborhood: neighborhoodValue,
+          address: addressValue,
+          phone: pickStr('phone'),
+          specialties: parsedSpecialties,
+        });
+
+        if (insertError) {
+          setError(
+            insertError.code === '23505'
+              ? 'Un garage existe déjà pour ce compte.'
+              : "Impossible d'enregistrer le garage. Réessayez."
+          );
+          return;
+        }
+
+        router.replace('/(garage)');
+        return;
+      }
+
+      router.replace('/(driver)');
+    } catch {
       setError('Code OTP invalide');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResendOtp = async () => {
-    if (!emailString) {
-      Alert.alert('Erreur', 'Email manquant');
-      return;
-    }
-
+  const handleResend = async () => {
+    if (!emailStr) return;
     try {
       setResendLoading(true);
 
-      let result;
-      if (otpType === 'recovery') {
-        result = await supabase.auth.resetPasswordForEmail(emailString, {
-          redirectTo: 'carlink://reset-password',
-        });
-      } else {
-        result = await supabase.auth.resetPasswordForEmail(emailString, {
-          redirectTo: 'carlink://verify-email',
-        });
-      }
+      const result = otpType === 'recovery'
+        ? await supabase.auth.resetPasswordForEmail(emailStr, {
+            redirectTo: 'carlink://reset-password',
+          })
+        : await supabase.auth.resend({ email: emailStr, type: 'signup' });
 
       if (result.error) {
-        Alert.alert('Erreur', 'Impossible d\'envoyer le code');
+        setError('Impossible d\'envoyer le code. Réessayez.');
         return;
       }
 
-      setResendCooldown(60);
-      Alert.alert('Succès', 'Un nouveau code a été envoyé');
-    } catch (error) {
-      Alert.alert('Erreur', 'Impossible d\'envoyer le code');
+      setCooldown(60);
+    } catch {
+      setError('Impossible d\'envoyer le code. Réessayez.');
     } finally {
       setResendLoading(false);
     }
   };
 
+  const isRecovery = otpType === 'recovery';
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.title}>
-          {otpType === 'recovery'
-            ? 'Réinitialiser votre mot de passe'
-            : 'Vérifier votre email'}
-        </Text>
+    <AuthLayout
+      onBack={() => router.back()}
+      heroIcon={MailCheck}
+      heroTone="red"
+      title={isRecovery ? 'Réinitialisez votre mot de passe' : 'Vérifiez votre email'}
+      lead={`Nous avons envoyé un code à 6 chiffres à ${maskEmail(emailStr)}`}
+    >
+      <OtpInput
+        value={otp}
+        onChangeText={setOtp}
+        length={6}
+        hasError={!!error}
+      />
 
-        <Text style={styles.subtitle}>
-          Nous avons envoyé un code à 6 chiffres à
-        </Text>
-        <Text style={styles.email}>{maskEmail(emailString)}</Text>
+      {error ? (
+        <BodySm
+          color={semantic.danger}
+          weight="500"
+          align="center"
+          style={{ marginBottom: 16 }}
+        >
+          {error}
+        </BodySm>
+      ) : null}
 
-        <OtpInput
-          value={otp}
-          onChangeText={setOtp}
-          length={6}
-          style={styles.otpInput}
-        />
+      <Caption color={fg.muted} align="center" style={{ marginBottom: 16 }}>
+        Le code expire dans 15 minutes.
+      </Caption>
 
-        {error && <Text style={styles.error}>{error}</Text>}
+      <Button
+        label="Vérifier"
+        onPress={handleVerify}
+        loading={loading}
+        disabled={loading || otp.length < 6}
+        fullWidth
+        style={authStyles.fullButton}
+      />
 
-        <Button
-          label="Vérifier"
-          onPress={handleVerifyOtp}
-          loading={loading}
-          disabled={loading || otp.length < 6}
-          style={styles.button}
-        />
-
-        <View style={styles.resendContainer}>
-          <Text style={styles.resendText}>Vous n'avez pas reçu le code ?</Text>
-          <TouchableOpacity
-            onPress={handleResendOtp}
-            disabled={resendCooldown > 0 || resendLoading}
+      <View style={[authStyles.altRow, { flexDirection: 'column', gap: 4 }]}>
+        <BodySm color={fg.muted} align="center">
+          Vous n'avez pas reçu le code ?
+        </BodySm>
+        <Pressable
+          onPress={handleResend}
+          disabled={cooldown > 0 || resendLoading}
+          hitSlop={8}
+        >
+          <BodySm
+            color={cooldown > 0 ? fg.muted : accent.base}
+            weight="600"
+            align="center"
           >
-            <Text
-              style={[
-                styles.resendButton,
-                (resendCooldown > 0 || resendLoading) && styles.resendButtonDisabled,
-              ]}
-            >
-              {resendCooldown > 0
-                ? `Renvoyer (${resendCooldown}s)`
-                : 'Renvoyer le code'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            {cooldown > 0
+              ? `Renvoyer dans ${cooldown}s`
+              : 'Renvoyer le code'}
+          </BodySm>
+        </Pressable>
+      </View>
+    </AuthLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.navyDeep,
-  },
-  content: {
-    paddingHorizontal: spacing[5],
-    paddingVertical: spacing[6],
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.white,
-    marginBottom: spacing[2],
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.muted,
-    marginBottom: spacing[1],
-  },
-  email: {
-    fontSize: 14,
-    color: colors.white,
-    fontWeight: '600',
-    marginBottom: spacing[6],
-  },
-  otpInput: {
-    marginVertical: spacing[4],
-  },
-  error: {
-    color: colors.error,
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: spacing[4],
-    textAlign: 'center',
-  },
-  button: {
-    marginTop: spacing[2],
-  },
-  resendContainer: {
-    marginTop: spacing[6],
-    alignItems: 'center',
-  },
-  resendText: {
-    color: colors.muted,
-    fontSize: 14,
-    marginBottom: spacing[2],
-  },
-  resendButton: {
-    color: colors.red,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  resendButtonDisabled: {
-    color: colors.muted,
-  },
-});

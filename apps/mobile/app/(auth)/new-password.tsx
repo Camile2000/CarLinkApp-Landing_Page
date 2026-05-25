@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  Text,
-  StyleSheet,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import { Alert } from 'react-native';
 import { router } from 'expo-router';
+import { ShieldCheck } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
 import { newPasswordSchema } from '@carlink/shared/validators';
-import { colors, spacing } from '../../src/constants/colors';
+import { AuthLayout, authStyles } from '../../src/components/ui/AuthLayout';
 import { Input } from '../../src/components/ui/Input';
 import { Button } from '../../src/components/ui/Button';
+import { Caption } from '../../src/components/ui/Typography';
+import { fg } from '../../src/constants/theme';
 
 export default function NewPasswordScreen() {
   const [password, setPassword] = useState('');
@@ -19,45 +16,34 @@ export default function NewPasswordScreen() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleUpdatePassword = async () => {
+  const handleUpdate = async () => {
     setErrors({});
 
     try {
-      const validatedData = newPasswordSchema.parse({
-        password,
-        confirm,
-      });
-
+      const data = newPasswordSchema.parse({ password, confirm });
       setLoading(true);
 
       const { error } = await supabase.auth.updateUser({
-        password: validatedData.password,
+        password: data.password,
       });
 
       if (error) {
-        Alert.alert('Erreur', error.message);
+        setErrors({ form: error.message });
         return;
       }
 
       Alert.alert(
-        'Succès',
-        'Votre mot de passe a été réinitialisé. Veuillez vous reconnecter.',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.push('/(auth)/signin'),
-          },
-        ]
+        'Mot de passe mis à jour',
+        'Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.',
+        [{ text: 'Se connecter', onPress: () => router.push('/(auth)/signin') }]
       );
-    } catch (error: unknown) {
-      if (error instanceof Error && 'errors' in error && Array.isArray(error.errors)) {
-        const newErrors: Record<string, string> = {};
-        (error.errors as Array<{ path?: string[]; message: string }>).forEach((err) => {
-          if (err.path) {
-            newErrors[err.path[0]] = err.message;
-          }
+    } catch (err: unknown) {
+      if (err instanceof Error && 'errors' in err && Array.isArray(err.errors)) {
+        const next: Record<string, string> = {};
+        (err.errors as Array<{ path?: string[]; message: string }>).forEach((e) => {
+          if (e.path) next[e.path[0]] = e.message;
         });
-        setErrors(newErrors);
+        setErrors(next);
       }
     } finally {
       setLoading(false);
@@ -65,78 +51,43 @@ export default function NewPasswordScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.title}>Nouveau mot de passe</Text>
-        <Text style={styles.subtitle}>
-          Créez un nouveau mot de passe pour votre compte CarLink
-        </Text>
+    <AuthLayout
+      onBack={() => router.back()}
+      heroIcon={ShieldCheck}
+      heroTone="success"
+      title="Nouveau mot de passe"
+      lead="Choisissez un mot de passe solide. Vous ne pourrez plus utiliser l'ancien."
+    >
+      <Input
+        label="Nouveau mot de passe"
+        value={password}
+        onChangeText={setPassword}
+        placeholder="8 caractères minimum"
+        secureTextEntry
+        error={errors.password}
+      />
 
-        <Input
-          label="Nouveau mot de passe"
-          value={password}
-          onChangeText={setPassword}
-          placeholder="••••••••"
-          secureTextEntry
-          error={errors.password}
-        />
+      <Input
+        label="Confirmer le mot de passe"
+        value={confirm}
+        onChangeText={setConfirm}
+        placeholder="••••••••"
+        secureTextEntry
+        error={errors.confirm ?? errors.form}
+      />
 
-        <Input
-          label="Confirmer le mot de passe"
-          value={confirm}
-          onChangeText={setConfirm}
-          placeholder="••••••••"
-          secureTextEntry
-          error={errors.confirm}
-        />
+      <Caption color={fg.muted} style={{ marginBottom: 16, lineHeight: 18 }}>
+        8 caractères minimum, dont une majuscule et un chiffre.
+      </Caption>
 
-        <Text style={styles.requirements}>
-          Le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre.
-        </Text>
-
-        <Button
-          label="Réinitialiser le mot de passe"
-          onPress={handleUpdatePassword}
-          loading={loading}
-          disabled={loading}
-          style={styles.button}
-        />
-      </ScrollView>
-    </SafeAreaView>
+      <Button
+        label="Réinitialiser"
+        onPress={handleUpdate}
+        loading={loading}
+        disabled={loading || !password || !confirm}
+        fullWidth
+        style={authStyles.fullButton}
+      />
+    </AuthLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.navyDeep,
-  },
-  content: {
-    paddingHorizontal: spacing[5],
-    paddingVertical: spacing[6],
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.white,
-    marginBottom: spacing[2],
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.muted,
-    marginBottom: spacing[6],
-  },
-  requirements: {
-    fontSize: 12,
-    color: colors.muted,
-    marginBottom: spacing[4],
-    lineHeight: 18,
-    fontStyle: 'italic',
-  },
-  button: {
-    marginTop: spacing[2],
-  },
-});

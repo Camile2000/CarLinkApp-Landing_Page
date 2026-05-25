@@ -117,8 +117,76 @@ export const garageUpdateSchema = z.object({
   garage_name: z.string().min(2).max(200),
   city: z.string().max(100).optional(),
   neighborhood: z.string().max(100).optional(),
+  address: z.string().max(200).optional(),
   phone: phoneSchema.optional(),
   specialties: z.array(z.string().max(100)).max(20).default([]),
+});
+
+// ── Garage sign-up (création du profil pro) ───────────────────────────────────
+
+export const garageSignUpSchema = z.object({
+  garage_name: z.string().min(2, 'Nom du garage requis').max(200),
+  city: z.string().min(2, 'Ville requise').max(100),
+  neighborhood: z.string().max(100).optional(),
+  address: z.string().max(200).optional(),
+  phone: phoneSchema,
+  specialties: z
+    .array(z.string().max(100))
+    .min(1, 'Au moins une spécialité requise')
+    .max(20),
+});
+
+// ── Conducteur sign-up complet (formulaire mobile) ────────────────────────────
+// Conforme à la maquette Showcase v3 : Prénom + Nom + Email + Téléphone +
+// Ville + Mot de passe. Le `full_name` est reconstruit côté client par
+// concaténation (firstName + ' ' + lastName) avant l'appel à signUp.
+
+export const conductorSignUpSchema = z.object({
+  first_name: z.string().min(1, 'Prénom requis').max(50),
+  last_name: z.string().min(1, 'Nom requis').max(50),
+  email: emailSchema,
+  phone: phoneSchema,
+  city: z.string().min(2, 'Ville requise').max(100),
+  password: passwordSchema,
+  language: z.enum(['fr', 'en']).default('fr'),
+});
+
+// ── Garagiste sign-up complet (formulaire mobile) ─────────────────────────────
+// Conforme à la maquette Showcase v3 : tous les champs garage saisis au
+// signup (plus de garage-setup intermédiaire). Le client crée d'abord le
+// user via supabase.auth.signUp (avec role='garage' dans metadata), puis
+// après vérification OTP insère la ligne dans public.garages.
+
+export const garagistSignUpSchema = z.object({
+  garage_name: z.string().min(2, 'Nom du garage requis').max(200),
+  manager_name: z.string().min(2, 'Nom du gérant requis').max(100),
+  email: emailSchema,
+  phone: phoneSchema,
+  city: z.string().min(2, 'Ville requise').max(100),
+  neighborhood: z.string().max(100).optional(),
+  address: z.string().min(2, 'Adresse requise').max(200),
+  specialties: z
+    .array(z.string().max(100))
+    .min(1, 'Au moins une spécialité requise')
+    .max(20),
+  password: passwordSchema,
+  language: z.enum(['fr', 'en']).default('fr'),
+});
+
+// ── Document garagiste ────────────────────────────────────────────────────────
+
+export const documentTypeSchema = z.enum([
+  'id_card',
+  'business_registry',
+  'tax_certificate',
+  'garage_photo',
+  'other',
+]);
+
+export const garageDocumentSchema = z.object({
+  garage_id: uuidSchema,
+  doc_type: documentTypeSchema,
+  file_path: z.string().min(1).max(500),
 });
 
 // ── Types inférés (utilisables directement dans le code) ─────────────────────
@@ -134,3 +202,7 @@ export type QuoteInput = z.infer<typeof quoteSchema>;
 export type MessageInput = z.infer<typeof messageSchema>;
 export type ReviewInput = z.infer<typeof reviewSchema>;
 export type GarageUpdateInput = z.infer<typeof garageUpdateSchema>;
+export type GarageSignUpInput = z.infer<typeof garageSignUpSchema>;
+export type GarageDocumentInput = z.infer<typeof garageDocumentSchema>;
+export type ConductorSignUpInput = z.infer<typeof conductorSignUpSchema>;
+export type GaragistSignUpInput = z.infer<typeof garagistSignUpSchema>;
