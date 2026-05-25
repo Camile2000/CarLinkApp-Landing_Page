@@ -55,7 +55,7 @@ export default function SplashScreen() {
     loopBreath(breathB, 1500).start();
 
     const t = setTimeout(() => {
-      router.replace('/(auth)/onboarding');
+      router.replace('/(auth)/role-choice');
     }, 2500);
 
     return () => clearTimeout(t);
