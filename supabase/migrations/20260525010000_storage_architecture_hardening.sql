@@ -16,12 +16,14 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, created_at, upda
   ON CONFLICT (id) DO NOTHING;
 
 -- SELECT: visible à tous (public)
+DROP POLICY IF EXISTS "public-assets: select (public)" ON storage.objects;
 CREATE POLICY "public-assets: select (public)"
   ON storage.objects
   FOR SELECT
   USING (bucket_id = 'public-assets');
 
 -- INSERT: admin seulement
+DROP POLICY IF EXISTS "public-assets: insert (admin)" ON storage.objects;
 CREATE POLICY "public-assets: insert (admin)"
   ON storage.objects
   FOR INSERT
@@ -31,6 +33,7 @@ CREATE POLICY "public-assets: insert (admin)"
   );
 
 -- UPDATE: admin seulement
+DROP POLICY IF EXISTS "public-assets: update (admin)" ON storage.objects;
 CREATE POLICY "public-assets: update (admin)"
   ON storage.objects
   FOR UPDATE
@@ -44,6 +47,7 @@ CREATE POLICY "public-assets: update (admin)"
   );
 
 -- DELETE: admin seulement
+DROP POLICY IF EXISTS "public-assets: delete (admin)" ON storage.objects;
 CREATE POLICY "public-assets: delete (admin)"
   ON storage.objects
   FOR DELETE
@@ -60,6 +64,7 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, created_at, upda
   ON CONFLICT (id) DO NOTHING;
 
 -- SELECT: propriétaire ou admin
+DROP POLICY IF EXISTS "user-avatars: select (owner/admin)" ON storage.objects;
 CREATE POLICY "user-avatars: select (owner/admin)"
   ON storage.objects
   FOR SELECT
@@ -72,6 +77,7 @@ CREATE POLICY "user-avatars: select (owner/admin)"
   );
 
 -- INSERT: propriétaire ou admin
+DROP POLICY IF EXISTS "user-avatars: insert (owner/admin)" ON storage.objects;
 CREATE POLICY "user-avatars: insert (owner/admin)"
   ON storage.objects
   FOR INSERT
@@ -84,6 +90,7 @@ CREATE POLICY "user-avatars: insert (owner/admin)"
   );
 
 -- UPDATE: propriétaire ou admin
+DROP POLICY IF EXISTS "user-avatars: update (owner/admin)" ON storage.objects;
 CREATE POLICY "user-avatars: update (owner/admin)"
   ON storage.objects
   FOR UPDATE
@@ -103,6 +110,7 @@ CREATE POLICY "user-avatars: update (owner/admin)"
   );
 
 -- DELETE: propriétaire ou admin
+DROP POLICY IF EXISTS "user-avatars: delete (owner/admin)" ON storage.objects;
 CREATE POLICY "user-avatars: delete (owner/admin)"
   ON storage.objects
   FOR DELETE
@@ -122,6 +130,7 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, created_at, upda
   ON CONFLICT (id) DO NOTHING;
 
 -- SELECT: visible si garage NOT suspended
+DROP POLICY IF EXISTS "garage-photos: select (public non-suspendu)" ON storage.objects;
 CREATE POLICY "garage-photos: select (public non-suspendu)"
   ON storage.objects
   FOR SELECT
@@ -135,6 +144,7 @@ CREATE POLICY "garage-photos: select (public non-suspendu)"
   );
 
 -- INSERT: propriétaire garage ou admin
+DROP POLICY IF EXISTS "garage-photos: insert (owner/admin)" ON storage.objects;
 CREATE POLICY "garage-photos: insert (owner/admin)"
   ON storage.objects
   FOR INSERT
@@ -151,6 +161,7 @@ CREATE POLICY "garage-photos: insert (owner/admin)"
   );
 
 -- UPDATE: propriétaire garage ou admin
+DROP POLICY IF EXISTS "garage-photos: update (owner/admin)" ON storage.objects;
 CREATE POLICY "garage-photos: update (owner/admin)"
   ON storage.objects
   FOR UPDATE
@@ -178,6 +189,7 @@ CREATE POLICY "garage-photos: update (owner/admin)"
   );
 
 -- DELETE: propriétaire garage ou admin
+DROP POLICY IF EXISTS "garage-photos: delete (owner/admin)" ON storage.objects;
 CREATE POLICY "garage-photos: delete (owner/admin)"
   ON storage.objects
   FOR DELETE
@@ -201,6 +213,7 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, created_at, upda
   ON CONFLICT (id) DO NOTHING;
 
 -- SELECT: propriétaire garage ou admin
+DROP POLICY IF EXISTS "garage-documents: select (owner/admin)" ON storage.objects;
 CREATE POLICY "garage-documents: select (owner/admin)"
   ON storage.objects
   FOR SELECT
@@ -217,6 +230,7 @@ CREATE POLICY "garage-documents: select (owner/admin)"
   );
 
 -- INSERT: propriétaire garage ou admin
+DROP POLICY IF EXISTS "garage-documents: insert (owner/admin)" ON storage.objects;
 CREATE POLICY "garage-documents: insert (owner/admin)"
   ON storage.objects
   FOR INSERT
@@ -233,6 +247,7 @@ CREATE POLICY "garage-documents: insert (owner/admin)"
   );
 
 -- UPDATE: propriétaire garage ou admin
+DROP POLICY IF EXISTS "garage-documents: update (owner/admin)" ON storage.objects;
 CREATE POLICY "garage-documents: update (owner/admin)"
   ON storage.objects
   FOR UPDATE
@@ -260,6 +275,7 @@ CREATE POLICY "garage-documents: update (owner/admin)"
   );
 
 -- DELETE: propriétaire garage ou admin
+DROP POLICY IF EXISTS "garage-documents: delete (owner/admin)" ON storage.objects;
 CREATE POLICY "garage-documents: delete (owner/admin)"
   ON storage.objects
   FOR DELETE
@@ -283,6 +299,7 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, created_at, upda
   ON CONFLICT (id) DO NOTHING;
 
 -- SELECT: conducteur, garage assigné, ou admin
+DROP POLICY IF EXISTS "quote-request-photos: select (conductor/garage/admin)" ON storage.objects;
 CREATE POLICY "quote-request-photos: select (conductor/garage/admin)"
   ON storage.objects
   FOR SELECT
@@ -307,6 +324,7 @@ CREATE POLICY "quote-request-photos: select (conductor/garage/admin)"
   );
 
 -- INSERT: conducteur ou garage assigné ou admin
+DROP POLICY IF EXISTS "quote-request-photos: insert (conductor/garage/admin)" ON storage.objects;
 CREATE POLICY "quote-request-photos: insert (conductor/garage/admin)"
   ON storage.objects
   FOR INSERT
@@ -331,6 +349,7 @@ CREATE POLICY "quote-request-photos: insert (conductor/garage/admin)"
   );
 
 -- UPDATE: conducteur ou garage assigné ou admin
+DROP POLICY IF EXISTS "quote-request-photos: update (conductor/garage/admin)" ON storage.objects;
 CREATE POLICY "quote-request-photos: update (conductor/garage/admin)"
   ON storage.objects
   FOR UPDATE
@@ -374,6 +393,7 @@ CREATE POLICY "quote-request-photos: update (conductor/garage/admin)"
   );
 
 -- DELETE: conducteur ou garage assigné ou admin
+DROP POLICY IF EXISTS "quote-request-photos: delete (conductor/garage/admin)" ON storage.objects;
 CREATE POLICY "quote-request-photos: delete (conductor/garage/admin)"
   ON storage.objects
   FOR DELETE
@@ -405,6 +425,7 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, created_at, upda
   ON CONFLICT (id) DO NOTHING;
 
 -- SELECT: auteur ou destinataire du message ou admin
+DROP POLICY IF EXISTS "quote-message-attachments: select (participants/admin)" ON storage.objects;
 CREATE POLICY "quote-message-attachments: select (participants/admin)"
   ON storage.objects
   FOR SELECT
@@ -421,6 +442,7 @@ CREATE POLICY "quote-message-attachments: select (participants/admin)"
   );
 
 -- INSERT: auteur du message ou admin
+DROP POLICY IF EXISTS "quote-message-attachments: insert (sender/admin)" ON storage.objects;
 CREATE POLICY "quote-message-attachments: insert (sender/admin)"
   ON storage.objects
   FOR INSERT
@@ -437,6 +459,7 @@ CREATE POLICY "quote-message-attachments: insert (sender/admin)"
   );
 
 -- UPDATE: auteur du message ou admin
+DROP POLICY IF EXISTS "quote-message-attachments: update (sender/admin)" ON storage.objects;
 CREATE POLICY "quote-message-attachments: update (sender/admin)"
   ON storage.objects
   FOR UPDATE
@@ -464,6 +487,7 @@ CREATE POLICY "quote-message-attachments: update (sender/admin)"
   );
 
 -- DELETE: auteur du message ou admin
+DROP POLICY IF EXISTS "quote-message-attachments: delete (sender/admin)" ON storage.objects;
 CREATE POLICY "quote-message-attachments: delete (sender/admin)"
   ON storage.objects
   FOR DELETE
@@ -487,6 +511,7 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, created_at, upda
   ON CONFLICT (id) DO NOTHING;
 
 -- SELECT: conducteur, garage, ou admin
+DROP POLICY IF EXISTS "intervention-before-after: select (conductor/garage/admin)" ON storage.objects;
 CREATE POLICY "intervention-before-after: select (conductor/garage/admin)"
   ON storage.objects
   FOR SELECT
@@ -512,6 +537,7 @@ CREATE POLICY "intervention-before-after: select (conductor/garage/admin)"
   );
 
 -- INSERT: garage ou admin
+DROP POLICY IF EXISTS "intervention-before-after: insert (garage/admin)" ON storage.objects;
 CREATE POLICY "intervention-before-after: insert (garage/admin)"
   ON storage.objects
   FOR INSERT
@@ -531,6 +557,7 @@ CREATE POLICY "intervention-before-after: insert (garage/admin)"
   );
 
 -- UPDATE: garage ou admin
+DROP POLICY IF EXISTS "intervention-before-after: update (garage/admin)" ON storage.objects;
 CREATE POLICY "intervention-before-after: update (garage/admin)"
   ON storage.objects
   FOR UPDATE
@@ -564,6 +591,7 @@ CREATE POLICY "intervention-before-after: update (garage/admin)"
   );
 
 -- DELETE: garage ou admin
+DROP POLICY IF EXISTS "intervention-before-after: delete (garage/admin)" ON storage.objects;
 CREATE POLICY "intervention-before-after: delete (garage/admin)"
   ON storage.objects
   FOR DELETE
@@ -590,6 +618,7 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, created_at, upda
   ON CONFLICT (id) DO NOTHING;
 
 -- SELECT: conducteur, garage, ou admin
+DROP POLICY IF EXISTS "invoices: select (conductor/garage/admin)" ON storage.objects;
 CREATE POLICY "invoices: select (conductor/garage/admin)"
   ON storage.objects
   FOR SELECT
@@ -615,6 +644,7 @@ CREATE POLICY "invoices: select (conductor/garage/admin)"
   );
 
 -- INSERT: garage ou admin
+DROP POLICY IF EXISTS "invoices: insert (garage/admin)" ON storage.objects;
 CREATE POLICY "invoices: insert (garage/admin)"
   ON storage.objects
   FOR INSERT
@@ -634,6 +664,7 @@ CREATE POLICY "invoices: insert (garage/admin)"
   );
 
 -- UPDATE: garage ou admin
+DROP POLICY IF EXISTS "invoices: update (garage/admin)" ON storage.objects;
 CREATE POLICY "invoices: update (garage/admin)"
   ON storage.objects
   FOR UPDATE
@@ -667,6 +698,7 @@ CREATE POLICY "invoices: update (garage/admin)"
   );
 
 -- DELETE: garage ou admin
+DROP POLICY IF EXISTS "invoices: delete (garage/admin)" ON storage.objects;
 CREATE POLICY "invoices: delete (garage/admin)"
   ON storage.objects
   FOR DELETE

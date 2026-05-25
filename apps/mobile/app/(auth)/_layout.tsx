@@ -10,13 +10,16 @@ export default function AuthLayout() {
           backgroundColor: colors.navyDeep,
         },
       }}
+      initialRouteName="splash"
     >
-      <Stack.Screen name="splash" />
+      <Stack.Screen name="splash" options={{ gestureEnabled: false }} />
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="role-choice" />
       <Stack.Screen name="signup-conductor" />
       <Stack.Screen name="signup-garage" />
       <Stack.Screen name="signin" />
+      <Stack.Screen name="signin-conductor" />
+      <Stack.Screen name="signin-garage" />
       <Stack.Screen name="forgot-password" />
       <Stack.Screen name="otp" />
       <Stack.Screen name="new-password" />

@@ -49,9 +49,9 @@ export default function RoleChoiceScreen() {
 
   const handleContinue = () => {
     if (selected === 'conductor') {
-      router.push('/(auth)/signup-conductor');
+      router.push('/(auth)/signin-conductor');
     } else if (selected === 'garage') {
-      router.push('/(auth)/signup-garage');
+      router.push('/(auth)/signin-garage');
     }
   };
 
@@ -143,16 +143,6 @@ export default function RoleChoiceScreen() {
             trailingIcon={ArrowRight}
             fullWidth
           />
-          <Pressable
-            onPress={() => router.push('/(auth)/signin')}
-            hitSlop={8}
-            style={s.altWrap}
-          >
-            <Text style={s.altTxt}>
-              Déjà un compte ?{' '}
-              <Text style={s.altTxtAccent}>Se connecter</Text>
-            </Text>
-          </Pressable>
         </View>
       </View>
     </View>

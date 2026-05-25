@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -6,9 +6,14 @@ import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 
 function RootLayoutContent() {
   const { session, profile, loading, profileError, signOut } = useAuth();
+  const navigationInitializedRef = useRef(false);
 
   useEffect(() => {
     if (loading) return;
+
+    // Prevent multiple navigation calls
+    if (navigationInitializedRef.current) return;
+    navigationInitializedRef.current = true;
 
     if (!session) {
       router.replace('/(auth)/splash');
@@ -43,7 +48,7 @@ function RootLayoutContent() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(auth)" options={{ gestureEnabled: false }} />
       <Stack.Screen name="(driver)" />
       <Stack.Screen name="(garage)" />
       <Stack.Screen name="(tabs)" />
