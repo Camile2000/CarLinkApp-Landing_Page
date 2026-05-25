@@ -848,8 +848,7 @@ const ill = StyleSheet.create({
     aspectRatio: 0.85,
     borderRadius: 12,
     overflow: 'hidden',
-    justifyContent: 'flex-end',
-    padding: 6,
+    position: 'relative',
   },
   photoBefore: {
     backgroundColor: '#5A4434',
@@ -866,6 +865,9 @@ const ill = StyleSheet.create({
     opacity: 0.75,
   },
   photoTxt: {
+    position: 'absolute',
+    bottom: 6,
+    left: 6,
     color: '#fff',
     fontSize: 8,
     fontWeight: '800',
@@ -874,7 +876,6 @@ const ill = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 2,
     borderRadius: 3,
-    alignSelf: 'flex-start',
   },
   photoIcon: {
     position: 'absolute',
