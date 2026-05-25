@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Wrench } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, Wrench } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
 import { garagistSignUpSchema } from '@carlink/shared/validators';
-import { AuthLayout, authStyles } from '../../src/components/ui/AuthLayout';
-import { Input } from '../../src/components/ui/Input';
 import { Button } from '../../src/components/ui/Button';
-import { BodySm } from '../../src/components/ui/Typography';
-import { accent, fg } from '../../src/constants/theme';
-import { LightSpecChip } from '../../src/components/ui/DarkInput';
+import { DarkInput, SpecChip } from '../../src/components/ui/DarkInput';
 
 const SPECIALTIES = [
   'Mécanique générale',
@@ -24,6 +30,7 @@ const SPECIALTIES = [
 ];
 
 export default function SignUpGarageScreen() {
+  const insets = useSafeAreaInsets();
   const [garageName, setGarageName] = useState('');
   const [managerName, setManagerName] = useState('');
   const [email, setEmail] = useState('');
@@ -113,139 +120,176 @@ export default function SignUpGarageScreen() {
   };
 
   return (
-    <AuthLayout
-      onBack={() => router.back()}
-      heroIcon={Wrench}
-      heroTone="red"
-      eyebrow="COMPTE GARAGISTE"
-      title="Créer mon compte garagiste"
-      lead="Renseignez les bases — vous compléterez le profil ensuite."
-    >
-      {errors.form ? (
-        <View style={authStyles.errorBanner}>
-          <BodySm color="#fff" weight="500">{errors.form}</BodySm>
+    <View style={s.root}>
+      <LinearGradient
+        colors={['#1F2937', '#0A0E15', '#0A0E15']}
+        locations={[0, 0.6, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+      <View style={s.haloRed} />
+
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={[s.safe, { paddingTop: insets.top + 6 }]}>
+          <View style={s.topBar}>
+            <Pressable onPress={() => router.back()} hitSlop={8} style={s.backIcon}>
+              <ArrowLeft size={20} color="rgba(255,255,255,0.7)" strokeWidth={2.2} />
+            </Pressable>
+          </View>
+
+          <ScrollView
+            style={s.scroll}
+            contentContainerStyle={[
+              s.scrollContent,
+              { paddingBottom: insets.bottom + 24 },
+            ]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={s.heroIconWrap}>
+              <Wrench size={26} color="#C8102E" strokeWidth={2.2} />
+            </View>
+
+            <Text style={s.eyebrow}>COMPTE GARAGISTE</Text>
+            <Text style={s.title}>Créer mon{'\n'}compte garagiste</Text>
+            <Text style={s.lead}>
+              Renseignez les bases — vous compléterez le profil ensuite.
+            </Text>
+
+            {errors.form ? (
+              <View style={s.errorBanner}>
+                <Text style={s.errorBannerTxt}>{errors.form}</Text>
+              </View>
+            ) : null}
+
+            <View style={s.form}>
+              <DarkInput
+                label="Nom du garage"
+                value={garageName}
+                onChangeText={setGarageName}
+                placeholder="Garage Étoile Bonapriso"
+                autoCapitalize="words"
+                error={errors.garage_name}
+              />
+
+              <DarkInput
+                label="Nom du gérant"
+                value={managerName}
+                onChangeText={setManagerName}
+                placeholder="Pascal Mbarga"
+                autoComplete="name"
+                error={errors.manager_name}
+              />
+
+              <DarkInput
+                label="Email pro"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="contact@garageetoile.cm"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                error={errors.email}
+              />
+
+              <DarkInput
+                label="Téléphone"
+                value={phone}
+                onChangeText={setPhone}
+                placeholder="+237 6 99 23 41 87"
+                keyboardType="phone-pad"
+                autoComplete="tel"
+                error={errors.phone}
+              />
+
+              <View style={s.row}>
+                <DarkInput
+                  label="Ville"
+                  value={city}
+                  onChangeText={setCity}
+                  placeholder="Douala"
+                  autoCapitalize="words"
+                  error={errors.city}
+                  style={{ flex: 1 }}
+                />
+                <DarkInput
+                  label="Quartier"
+                  value={neighborhood}
+                  onChangeText={setNeighborhood}
+                  placeholder="Bonapriso"
+                  autoCapitalize="words"
+                  error={errors.neighborhood}
+                  style={{ flex: 1 }}
+                />
+              </View>
+
+              <DarkInput
+                label="Adresse"
+                value={address}
+                onChangeText={setAddress}
+                placeholder="Rue 1.234, Bonapriso"
+                autoCapitalize="words"
+                error={errors.address}
+              />
+
+              <View style={s.specWrap}>
+                <Text style={s.specLabel}>
+                  Spécialités principales
+                  {specialties.length > 0 ? (
+                    <Text style={s.specCount}> · {specialties.length}</Text>
+                  ) : null}
+                </Text>
+                <View style={s.specChips}>
+                  {SPECIALTIES.map((spec) => (
+                    <SpecChip
+                      key={spec}
+                      label={spec}
+                      selected={specialties.includes(spec)}
+                      onPress={() => toggleSpec(spec)}
+                    />
+                  ))}
+                </View>
+                {errors.specialties ? (
+                  <Text style={s.specError}>{errors.specialties}</Text>
+                ) : null}
+              </View>
+
+              <DarkInput
+                label="Mot de passe"
+                value={password}
+                onChangeText={setPassword}
+                placeholder="••••••••"
+                secureTextEntry
+                helper="8 caractères minimum, dont 1 majuscule et 1 chiffre."
+                error={errors.password}
+              />
+
+              <Button
+                label="Continuer vers la vérification"
+                onPress={handleSignUp}
+                loading={loading}
+                disabled={loading}
+                trailingIcon={ArrowRight}
+                fullWidth
+                style={s.cta}
+              />
+            </View>
+
+            <Pressable
+              onPress={() => router.push('/(auth)/signin')}
+              hitSlop={8}
+              style={s.altWrap}
+            >
+              <Text style={s.altTxt}>
+                Déjà inscrit ? <Text style={s.altTxtAccent}>Se connecter</Text>
+              </Text>
+            </Pressable>
+          </ScrollView>
         </View>
-      ) : null}
-
-      <Input
-        label="Nom du garage"
-        value={garageName}
-        onChangeText={setGarageName}
-        placeholder="Garage Étoile Bonapriso"
-        autoCapitalize="words"
-        error={errors.garage_name}
-      />
-
-      <Input
-        label="Nom du gérant"
-        value={managerName}
-        onChangeText={setManagerName}
-        placeholder="Pascal Mbarga"
-        autoComplete="name"
-        error={errors.manager_name}
-      />
-
-      <Input
-        label="Email pro"
-        value={email}
-        onChangeText={setEmail}
-        placeholder="contact@garageetoile.cm"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoComplete="email"
-        error={errors.email}
-      />
-
-      <Input
-        label="Téléphone"
-        value={phone}
-        onChangeText={setPhone}
-        placeholder="+237 6 99 23 41 87"
-        keyboardType="phone-pad"
-        autoComplete="tel"
-        error={errors.phone}
-      />
-
-      <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Input
-          label="Ville"
-          value={city}
-          onChangeText={setCity}
-          placeholder="Douala"
-          autoCapitalize="words"
-          error={errors.city}
-          style={{ flex: 1 }}
-        />
-        <Input
-          label="Quartier"
-          value={neighborhood}
-          onChangeText={setNeighborhood}
-          placeholder="Bonapriso"
-          autoCapitalize="words"
-          error={errors.neighborhood}
-          style={{ flex: 1 }}
-        />
-      </View>
-
-      <Input
-        label="Adresse"
-        value={address}
-        onChangeText={setAddress}
-        placeholder="Rue 1.234, Bonapriso"
-        autoCapitalize="words"
-        error={errors.address}
-      />
-
-      <View style={{ marginBottom: 14 }}>
-        <BodySm weight="600" style={{ marginBottom: 8, letterSpacing: 0.2 }}>
-          Spécialités principales
-          {specialties.length > 0 ? (
-            <BodySm color={accent.base} weight="700"> · {specialties.length}</BodySm>
-          ) : null}
-        </BodySm>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {SPECIALTIES.map((spec) => (
-            <LightSpecChip
-              key={spec}
-              label={spec}
-              selected={specialties.includes(spec)}
-              onPress={() => toggleSpec(spec)}
-            />
-          ))}
-        </View>
-        {errors.specialties ? (
-          <BodySm weight="500" style={{ marginTop: 6, fontSize: 11, color: '#FF6B7A' }}>
-            {errors.specialties}
-          </BodySm>
-        ) : null}
-      </View>
-
-      <Input
-        label="Mot de passe"
-        value={password}
-        onChangeText={setPassword}
-        placeholder="••••••••"
-        secureTextEntry
-        helper="8 caractères minimum, dont 1 majuscule et 1 chiffre."
-        error={errors.password}
-      />
-
-      <Button
-        label="Continuer vers la vérification"
-        onPress={handleSignUp}
-        loading={loading}
-        disabled={loading}
-        fullWidth
-        style={authStyles.fullButton}
-      />
-
-      <View style={authStyles.altRow}>
-        <BodySm color={fg.muted}>Déjà inscrit ?</BodySm>
-        <Pressable onPress={() => router.push('/(auth)/signin')} hitSlop={8}>
-          <BodySm color={accent.base} weight="600"> Se connecter</BodySm>
-        </Pressable>
-      </View>
-    </AuthLayout>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 

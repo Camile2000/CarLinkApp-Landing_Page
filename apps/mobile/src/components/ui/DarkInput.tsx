@@ -109,21 +109,6 @@ export function SpecChip({ label, selected, onPress }: SpecChipProps) {
   );
 }
 
-export function LightSpecChip({ label, selected, onPress }: SpecChipProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        s.lightChip,
-        selected && s.lightChipOn,
-        pressed && s.lightChipPressed,
-      ]}
-    >
-      <Text style={[s.lightChipTxt, selected && s.lightChipTxtOn]}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const s = StyleSheet.create({
   container: {
     marginBottom: 14,
@@ -198,30 +183,6 @@ const s = StyleSheet.create({
     letterSpacing: -0.1,
   },
   chipTxtOn: {
-    color: '#fff',
-  },
-  lightChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: 'rgba(0,0,0,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.12)',
-  },
-  lightChipOn: {
-    backgroundColor: '#C8102E',
-    borderColor: '#C8102E',
-  },
-  lightChipPressed: {
-    opacity: 0.7,
-  },
-  lightChipTxt: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: 'rgba(0,0,0,0.6)',
-    letterSpacing: -0.1,
-  },
-  lightChipTxtOn: {
     color: '#fff',
   },
 });
