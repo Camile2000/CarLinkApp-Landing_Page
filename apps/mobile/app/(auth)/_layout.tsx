@@ -14,12 +14,12 @@ export default function AuthLayout() {
       <Stack.Screen name="splash" />
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="role-choice" />
-      <Stack.Screen name="signup" />
+      <Stack.Screen name="signup-conductor" />
+      <Stack.Screen name="signup-garage" />
       <Stack.Screen name="signin" />
       <Stack.Screen name="forgot-password" />
       <Stack.Screen name="otp" />
       <Stack.Screen name="new-password" />
-      <Stack.Screen name="garage-setup" />
       <Stack.Screen name="reset-password" />
     </Stack>
   );

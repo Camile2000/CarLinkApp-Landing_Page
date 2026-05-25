@@ -48,11 +48,10 @@ export default function RoleChoiceScreen() {
   const insets = useSafeAreaInsets();
 
   const handleContinue = () => {
-    if (selected) {
-      router.push({
-        pathname: '/(auth)/signup',
-        params: { selectedRole: selected },
-      });
+    if (selected === 'conductor') {
+      router.push('/(auth)/signup-conductor');
+    } else if (selected === 'garage') {
+      router.push('/(auth)/signup-garage');
     }
   };
 

@@ -55,6 +55,7 @@ export interface Garage {
   garage_name: string;
   city: string | null;
   neighborhood: string | null;
+  address: string | null;
   latitude: number | null;
   longitude: number | null;
   phone: string | null;

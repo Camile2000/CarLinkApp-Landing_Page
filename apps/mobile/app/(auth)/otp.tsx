@@ -13,7 +13,8 @@ import { accent, fg, semantic } from '../../src/constants/theme';
 type OtpType = 'signup' | 'recovery';
 
 export default function OtpScreen() {
-  const { email, type = 'signup', role } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const { email, type = 'signup', role } = params;
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -23,6 +24,12 @@ export default function OtpScreen() {
   const emailStr = Array.isArray(email) ? email[0] : (email ?? '');
   const otpType = Array.isArray(type) ? type[0] : type;
   const roleStr = Array.isArray(role) ? role[0] : role;
+
+  const pickStr = (key: string): string => {
+    const v = params[key];
+    if (Array.isArray(v)) return v[0] ?? '';
+    return v ?? '';
+  };
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -57,11 +64,53 @@ export default function OtpScreen() {
 
       if (otpType === 'recovery') {
         router.push('/(auth)/new-password');
-      } else if (roleStr === 'garage') {
-        router.replace('/(auth)/garage-setup');
-      } else {
-        router.replace('/(driver)');
+        return;
       }
+
+      if (roleStr === 'garage') {
+        // L'utilisateur garage a saisi toutes ses infos au signup-garage.
+        // Après vérification OTP, on insère la ligne garages liée à son user_id.
+        const { data: sessionData } = await supabase.auth.getSession();
+        const userId = sessionData.session?.user.id;
+        if (!userId) {
+          setError('Session invalide après vérification. Veuillez vous reconnecter.');
+          return;
+        }
+
+        let parsedSpecialties: string[] = [];
+        try {
+          parsedSpecialties = JSON.parse(pickStr('specialties') || '[]');
+        } catch {
+          parsedSpecialties = [];
+        }
+
+        const neighborhoodValue = pickStr('neighborhood').trim() || null;
+        const addressValue = pickStr('address').trim() || null;
+
+        const { error: insertError } = await supabase.from('garages').insert({
+          user_id: userId,
+          garage_name: pickStr('garage_name'),
+          city: pickStr('city'),
+          neighborhood: neighborhoodValue,
+          address: addressValue,
+          phone: pickStr('phone'),
+          specialties: parsedSpecialties,
+        });
+
+        if (insertError) {
+          setError(
+            insertError.code === '23505'
+              ? 'Un garage existe déjà pour ce compte.'
+              : "Impossible d'enregistrer le garage. Réessayez."
+          );
+          return;
+        }
+
+        router.replace('/(garage)');
+        return;
+      }
+
+      router.replace('/(driver)');
     } catch {
       setError('Code OTP invalide');
     } finally {

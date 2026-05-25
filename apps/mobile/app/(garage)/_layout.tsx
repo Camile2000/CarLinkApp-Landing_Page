@@ -38,7 +38,13 @@ export default function GarageLayout() {
       checkedRef.current = session.user.id;
 
       if (!data) {
-        router.replace('/(auth)/garage-setup');
+        // Cas anormal : compte garage sans ligne garages associée.
+        // Avec le nouveau flow, l'INSERT garages se fait dans otp.tsx juste
+        // après la vérification de l'email. Si on arrive ici, l'inscription
+        // a été interrompue. On signe out + redirige vers le choix du rôle
+        // pour que l'utilisateur recommence le signup proprement.
+        await supabase.auth.signOut();
+        router.replace('/(auth)/role-choice');
       }
     };
 
