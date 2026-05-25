@@ -32,6 +32,6 @@
   },
   "devDependencies": {
     "next": "15.5.18",
-    "eslint-config-next": "15.5.18"
+    "eslint-config-next": "16.2.6"
   }
 }
