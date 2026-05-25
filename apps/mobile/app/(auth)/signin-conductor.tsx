@@ -51,7 +51,7 @@ export default function SignInConductorScreen() {
 
   return (
     <AuthLayout
-      onBack={() => router.back()}
+      onBack={() => router.replace('/(auth)/role-choice')}
       heroIcon={Car}
       heroTone="red"
       title="Se connecter"
