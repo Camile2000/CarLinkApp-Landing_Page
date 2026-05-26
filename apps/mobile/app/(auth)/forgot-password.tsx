@@ -50,7 +50,7 @@ export default function ForgotPasswordScreen() {
 
   return (
     <AuthLayout
-      onBack={() => router.replace(role === 'garage' ? '/(auth)/signin-garage' : '/(auth)/signin-conductor')}
+      onBack={() => router.back()}
       heroIcon={Mail}
       heroTone="red"
       title="Mot de passe oublié ?"

@@ -51,7 +51,7 @@ export default function SignInGarageScreen() {
 
   return (
     <AuthLayout
-      onBack={() => router.replace('/(auth)/role-choice')}
+      onBack={() => router.back()}
       heroIcon={Wrench}
       heroTone="red"
       title="Se connecter"

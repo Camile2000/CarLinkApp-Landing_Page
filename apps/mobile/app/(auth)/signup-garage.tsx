@@ -116,7 +116,7 @@ export default function SignUpGarageScreen() {
 
   return (
     <AuthLayout
-      onBack={() => router.replace('/(auth)/signin-garage')}
+      onBack={() => router.back()}
       heroIcon={Wrench}
       heroTone="red"
       eyebrow="COMPTE GARAGISTE"
