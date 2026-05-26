@@ -9,6 +9,7 @@ import { Input } from '../../src/components/ui/Input';
 import { Button } from '../../src/components/ui/Button';
 import { BodySm } from '../../src/components/ui/Typography';
 import { accent, fg } from '../../src/constants/theme';
+import { useToast } from '../../src/contexts/ToastContext';
 import { LightSpecChip } from '../../src/components/ui/DarkInput';
 
 const SPECIALTIES = [
@@ -36,6 +37,7 @@ export default function SignUpGarageScreen() {
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const toast = useToast();
 
   const toggleSpec = (spec: string) => {
     setSpecialties((prev) =>
@@ -78,33 +80,38 @@ export default function SignUpGarageScreen() {
 
       if (error) {
         if (error.message.includes('already registered')) {
+          toast.error('Cet email est déjà utilisé');
           setErrors({ email: 'Cet email est déjà utilisé' });
         } else {
-          setErrors({ form: error.message });
+          toast.error(error.message);
         }
         return;
       }
 
-      // Les infos garage sont passées en params jusqu'à OTP qui fera
-      // l'INSERT dans public.garages après vérification de l'email.
-      router.push({
-        pathname: '/(auth)/otp',
-        params: {
-          email: data.email,
-          type: 'signup',
-          role: 'garage',
-          garage_name: data.garage_name,
-          phone: data.phone,
-          city: data.city,
-          neighborhood: data.neighborhood ?? '',
-          address: data.address,
-          specialties: JSON.stringify(data.specialties),
-        },
-      });
+      toast.success('Inscription réussie. Vérifiez votre email.');
+      setTimeout(() => {
+        router.push({
+          pathname: '/(auth)/otp',
+          params: {
+            email: data.email,
+            type: 'signup',
+            role: 'garage',
+            garage_name: data.garage_name,
+            phone: data.phone,
+            city: data.city,
+            neighborhood: data.neighborhood ?? '',
+            address: data.address,
+            specialties: JSON.stringify(data.specialties),
+          },
+        });
+      }, 500);
     } catch (err: unknown) {
       if (err instanceof Error && 'errors' in err && Array.isArray(err.errors)) {
+        const errArray = err.errors as Array<{ path?: string[]; message: string }>;
+        const firstMsg = errArray[0]?.message || 'Erreur de validation';
+        toast.error(firstMsg, 5000);
         const next: Record<string, string> = {};
-        (err.errors as Array<{ path?: string[]; message: string }>).forEach((e) => {
+        errArray.forEach((e) => {
           if (e.path) next[e.path[0]] = e.message;
         });
         setErrors(next);
@@ -123,12 +130,6 @@ export default function SignUpGarageScreen() {
       title="Créer mon compte garagiste"
       lead="Renseignez les bases — vous compléterez le profil ensuite."
     >
-      {errors.form ? (
-        <View style={authStyles.errorBanner}>
-          <BodySm color="#fff" weight="500">{errors.form}</BodySm>
-        </View>
-      ) : null}
-
       <Input
         label="Nom du garage"
         value={garageName}

@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Car } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
 import { conductorSignUpSchema } from '@carlink/shared/validators';
+import { useToast } from '../../src/contexts/ToastContext';
 import { AuthLayout, authStyles } from '../../src/components/ui/AuthLayout';
 import { Input } from '../../src/components/ui/Input';
 import { Button } from '../../src/components/ui/Button';
@@ -20,6 +21,7 @@ export default function SignUpConductorScreen() {
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const toast = useToast();
 
   const handleSignUp = async () => {
     setErrors({});
@@ -55,21 +57,28 @@ export default function SignUpConductorScreen() {
 
       if (error) {
         if (error.message.includes('already registered')) {
+          toast.error('Cet email est déjà utilisé');
           setErrors({ email: 'Cet email est déjà utilisé' });
         } else {
-          setErrors({ form: error.message });
+          toast.error(error.message);
         }
         return;
       }
 
-      router.push({
-        pathname: '/(auth)/otp',
-        params: { email: data.email, type: 'signup', role: 'conductor' },
-      });
+      toast.success('Inscription réussie. Vérifiez votre email.');
+      setTimeout(() => {
+        router.push({
+          pathname: '/(auth)/otp',
+          params: { email: data.email, type: 'signup', role: 'conductor' },
+        });
+      }, 500);
     } catch (err: unknown) {
       if (err instanceof Error && 'errors' in err && Array.isArray(err.errors)) {
+        const errArray = err.errors as Array<{ path?: string[]; message: string }>;
+        const firstMsg = errArray[0]?.message || 'Erreur de validation';
+        toast.error(firstMsg, 5000);
         const next: Record<string, string> = {};
-        (err.errors as Array<{ path?: string[]; message: string }>).forEach((e) => {
+        errArray.forEach((e) => {
           if (e.path) next[e.path[0]] = e.message;
         });
         setErrors(next);
@@ -88,12 +97,6 @@ export default function SignUpConductorScreen() {
       title="Créer mon compte"
       lead="Quelques informations pour vous proposer les meilleurs garages."
     >
-      {errors.form ? (
-        <View style={authStyles.errorBanner}>
-          <BodySm color="#fff" weight="500">{errors.form}</BodySm>
-        </View>
-      ) : null}
-
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Input
           label="Prénom"

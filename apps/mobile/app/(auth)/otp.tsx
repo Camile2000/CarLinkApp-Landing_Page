@@ -4,6 +4,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { MailCheck } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
 import { otpSchema } from '@carlink/shared/validators';
+import { useToast } from '../../src/contexts/ToastContext';
 import { AuthLayout, authStyles } from '../../src/components/ui/AuthLayout';
 import { OtpInput } from '../../src/components/ui/OtpInput';
 import { Button } from '../../src/components/ui/Button';
@@ -20,6 +21,7 @@ export default function OtpScreen() {
   const [resendLoading, setResendLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [error, setError] = useState('');
+  const toast = useToast();
 
   const emailStr = Array.isArray(email) ? email[0] : (email ?? '');
   const otpType = Array.isArray(type) ? type[0] : type;
@@ -58,6 +60,7 @@ export default function OtpScreen() {
       });
 
       if (err) {
+        toast.warning('Code OTP invalide. Vérifiez et réessayez.');
         setError('Code incorrect. Veuillez réessayer.');
         return;
       }
@@ -73,6 +76,7 @@ export default function OtpScreen() {
         const { data: sessionData } = await supabase.auth.getSession();
         const userId = sessionData.session?.user.id;
         if (!userId) {
+          toast.error('Votre session a expiré. Recommencez l\'inscription.');
           setError('Session invalide après vérification. Veuillez vous reconnecter.');
           return;
         }
@@ -98,11 +102,11 @@ export default function OtpScreen() {
         });
 
         if (insertError) {
-          setError(
-            insertError.code === '23505'
-              ? 'Un garage existe déjà pour ce compte.'
-              : "Impossible d'enregistrer le garage. Réessayez."
-          );
+          const insertMsg = insertError.code === '23505'
+            ? 'Un garage existe déjà pour ce compte.'
+            : "Impossible d'enregistrer le garage. Réessayez.";
+          toast.error(insertMsg);
+          setError(insertMsg);
           return;
         }
 
@@ -112,6 +116,7 @@ export default function OtpScreen() {
 
       router.replace('/(driver)');
     } catch {
+      toast.error('Format OTP invalide');
       setError('Code OTP invalide');
     } finally {
       setLoading(false);
@@ -130,12 +135,15 @@ export default function OtpScreen() {
         : await supabase.auth.resend({ email: emailStr, type: 'signup' });
 
       if (result.error) {
+        toast.error('Impossible d\'envoyer le code. Réessayez.');
         setError('Impossible d\'envoyer le code. Réessayez.');
         return;
       }
 
+      toast.success('Code renvoyé. Vérifiez votre email.');
       setCooldown(60);
     } catch {
+      toast.error('Impossible d\'envoyer le code. Réessayez.');
       setError('Impossible d\'envoyer le code. Réessayez.');
     } finally {
       setResendLoading(false);

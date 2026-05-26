@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Alert } from 'react-native';
 import { router } from 'expo-router';
 import { ShieldCheck } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
 import { newPasswordSchema } from '@carlink/shared/validators';
+import { useToast } from '../../src/contexts/ToastContext';
 import { AuthLayout, authStyles } from '../../src/components/ui/AuthLayout';
 import { Input } from '../../src/components/ui/Input';
 import { Button } from '../../src/components/ui/Button';
@@ -15,6 +15,7 @@ export default function NewPasswordScreen() {
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const toast = useToast();
 
   const handleUpdate = async () => {
     setErrors({});
@@ -28,19 +29,22 @@ export default function NewPasswordScreen() {
       });
 
       if (error) {
+        toast.error(error.message);
         setErrors({ form: error.message });
         return;
       }
 
-      Alert.alert(
-        'Mot de passe mis à jour',
-        'Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.',
-        [{ text: 'Se connecter', onPress: () => router.push('/(auth)/signin') }]
-      );
+      toast.success('Mot de passe mis à jour avec succès !');
+      setTimeout(() => {
+        router.push('/(auth)/signin');
+      }, 500);
     } catch (err: unknown) {
       if (err instanceof Error && 'errors' in err && Array.isArray(err.errors)) {
+        const errArray = err.errors as Array<{ path?: string[]; message: string }>;
+        const firstMsg = errArray[0]?.message || 'Erreur de validation';
+        toast.error(firstMsg, 5000);
         const next: Record<string, string> = {};
-        (err.errors as Array<{ path?: string[]; message: string }>).forEach((e) => {
+        errArray.forEach((e) => {
           if (e.path) next[e.path[0]] = e.message;
         });
         setErrors(next);

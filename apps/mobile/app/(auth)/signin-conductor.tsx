@@ -41,7 +41,7 @@ export default function SignInConductorScreen() {
       if (err instanceof Error && 'errors' in err && Array.isArray(err.errors)) {
         const errArray = err.errors as Array<{ path?: string[]; message: string }>;
         const firstMsg = errArray[0]?.message || 'Erreur de validation';
-        toast.error(firstMsg, { duration: 5000 });
+        toast.error(firstMsg, 5000);
         const next: Record<string, string> = {};
         errArray.forEach((e) => {
           if (e.path) next[e.path[0]] = e.message;
