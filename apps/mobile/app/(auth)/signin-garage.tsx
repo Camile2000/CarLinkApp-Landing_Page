@@ -16,6 +16,8 @@ export default function SignInGarageScreen() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const toast = useToast();
+
   const handleSignIn = async () => {
     setErrors({});
 
@@ -29,17 +31,19 @@ export default function SignInGarageScreen() {
       });
 
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          setErrors({ form: 'Email ou mot de passe incorrect' });
-        } else {
-          setErrors({ form: error.message });
-        }
+        const msg = error.message.includes('Invalid login credentials')
+          ? 'Email ou mot de passe incorrect'
+          : error.message;
+        toast.error(msg);
         return;
       }
     } catch (err: unknown) {
       if (err instanceof Error && 'errors' in err && Array.isArray(err.errors)) {
+        const errArray = err.errors as Array<{ path?: string[]; message: string }>;
+        const firstMsg = errArray[0]?.message || 'Erreur de validation';
+        toast.error(firstMsg, { duration: 5000 });
         const next: Record<string, string> = {};
-        (err.errors as Array<{ path?: string[]; message: string }>).forEach((e) => {
+        errArray.forEach((e) => {
           if (e.path) next[e.path[0]] = e.message;
         });
         setErrors(next);

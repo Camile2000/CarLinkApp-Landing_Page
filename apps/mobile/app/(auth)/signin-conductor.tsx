@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Car } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
 import { credentialsSchema } from '@carlink/shared/validators';
+import { useToast } from '../../src/contexts/ToastContext';
 import { AuthLayout, authStyles } from '../../src/components/ui/AuthLayout';
 import { Input } from '../../src/components/ui/Input';
 import { Button } from '../../src/components/ui/Button';
@@ -15,6 +16,8 @@ export default function SignInConductorScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const toast = useToast();
 
   const handleSignIn = async () => {
     setErrors({});
@@ -29,17 +32,19 @@ export default function SignInConductorScreen() {
       });
 
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          setErrors({ form: 'Email ou mot de passe incorrect' });
-        } else {
-          setErrors({ form: error.message });
-        }
+        const msg = error.message.includes('Invalid login credentials')
+          ? 'Email ou mot de passe incorrect'
+          : error.message;
+        toast.error(msg);
         return;
       }
     } catch (err: unknown) {
       if (err instanceof Error && 'errors' in err && Array.isArray(err.errors)) {
+        const errArray = err.errors as Array<{ path?: string[]; message: string }>;
+        const firstMsg = errArray[0]?.message || 'Erreur de validation';
+        toast.error(firstMsg, { duration: 5000 });
         const next: Record<string, string> = {};
-        (err.errors as Array<{ path?: string[]; message: string }>).forEach((e) => {
+        errArray.forEach((e) => {
           if (e.path) next[e.path[0]] = e.message;
         });
         setErrors(next);
@@ -57,12 +62,6 @@ export default function SignInConductorScreen() {
       title="Se connecter"
       lead="Accédez à votre compte conducteur CarLink."
     >
-      {errors.form ? (
-        <View style={authStyles.errorBanner}>
-          <BodySm color="#fff" weight="500">{errors.form}</BodySm>
-        </View>
-      ) : null}
-
       <Input
         label="Email"
         value={email}
