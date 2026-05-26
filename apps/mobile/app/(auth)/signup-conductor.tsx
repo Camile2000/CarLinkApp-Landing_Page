@@ -17,6 +17,7 @@ export default function SignUpConductorScreen() {
   const [phone, setPhone] = useState('');
   const [city, setCity] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -31,6 +32,7 @@ export default function SignUpConductorScreen() {
         phone: phone.trim(),
         city: city.trim(),
         password,
+        password_confirm: passwordConfirm,
         language: 'fr',
       });
 
@@ -151,6 +153,15 @@ export default function SignUpConductorScreen() {
         secureTextEntry
         helper="8 caractères minimum, dont 1 majuscule et 1 chiffre."
         error={errors.password}
+      />
+
+      <Input
+        label="Confirmer le mot de passe"
+        value={passwordConfirm}
+        onChangeText={setPasswordConfirm}
+        placeholder="••••••••"
+        secureTextEntry
+        error={errors.password_confirm}
       />
 
       <Button

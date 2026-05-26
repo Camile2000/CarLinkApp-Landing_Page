@@ -148,8 +148,15 @@ export const conductorSignUpSchema = z.object({
   phone: phoneSchema,
   city: z.string().min(2, 'Ville requise').max(100),
   password: passwordSchema,
+  password_confirm: z.string(),
   language: z.enum(['fr', 'en']).default('fr'),
-});
+}).refine(
+  (data) => data.password === data.password_confirm,
+  {
+    message: 'Les mots de passe ne correspondent pas',
+    path: ['password_confirm'],
+  }
+);
 
 // ── Garagiste sign-up complet (formulaire mobile) ─────────────────────────────
 // Conforme à la maquette Showcase v3 : tous les champs garage saisis au
@@ -170,8 +177,15 @@ export const garagistSignUpSchema = z.object({
     .min(1, 'Au moins une spécialité requise')
     .max(20),
   password: passwordSchema,
+  password_confirm: z.string(),
   language: z.enum(['fr', 'en']).default('fr'),
-});
+}).refine(
+  (data) => data.password === data.password_confirm,
+  {
+    message: 'Les mots de passe ne correspondent pas',
+    path: ['password_confirm'],
+  }
+);
 
 // ── Document garagiste ────────────────────────────────────────────────────────
 

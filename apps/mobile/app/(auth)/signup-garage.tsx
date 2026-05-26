@@ -33,6 +33,7 @@ export default function SignUpGarageScreen() {
   const [address, setAddress] = useState('');
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -56,6 +57,7 @@ export default function SignUpGarageScreen() {
         address: address.trim(),
         specialties,
         password,
+        password_confirm: passwordConfirm,
         language: 'fr',
       });
 
@@ -146,7 +148,7 @@ export default function SignUpGarageScreen() {
       />
 
       <Input
-        label="Email pro"
+        label="Email"
         value={email}
         onChangeText={setEmail}
         placeholder="contact@garageetoile.cm"
@@ -228,6 +230,15 @@ export default function SignUpGarageScreen() {
         secureTextEntry
         helper="8 caractères minimum, dont 1 majuscule et 1 chiffre."
         error={errors.password}
+      />
+
+      <Input
+        label="Confirmer le mot de passe"
+        value={passwordConfirm}
+        onChangeText={setPasswordConfirm}
+        placeholder="••••••••"
+        secureTextEntry
+        error={errors.password_confirm}
       />
 
       <Button
