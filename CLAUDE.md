@@ -132,6 +132,203 @@ Si une demande entre en conflit avec `SECURITY.md`, **alerte le client avant d'a
 
 ---
 
+## Classification des types de user (Backend & RLS)
+
+**CRITIQUE : Le système de rôles utilisateur est le fondement de toute la sécurité de l'app.**
+
+### Types de rôles (Enum)
+
+Trois rôles définis dans `supabase/schema.sql:12` :
+
+```sql
+CREATE TYPE user_role AS ENUM ('conductor', 'garage', 'admin');
+```
+
+- **`conductor`** : Utilisateurs particuliers qui demandent des services
+  - Peuvent créer des demandes de devis
+  - Voient uniquement leurs propres demandes, messages, avis
+  - Ne peuvent pas modifier leurs données sans réauthentification
+  - Rôle **PAR DÉFAUT** à l'inscription
+  
+- **`garage`** : Professionnels offrant des services
+  - Reçoivent les demandes de devis
+  - Peuvent répondre avec des devis
+  - Accèdent au chat et aux évaluations
+  - Voient uniquement leurs données (garages, devis, clients, avis)
+  - Ne peuvent pas suspendre d'autres garages
+  - Rôle assigné **EXPLICITEMENT** lors de l'inscription
+  
+- **`admin`** : Administrateurs système
+  - Accès complet à toutes les données
+  - Peuvent modérer les avis
+  - Peuvent suspendre/réactiver les garages
+  - Peuvent voir les statistiques globales
+  - Rôle **JAMAIS ASSIGNÉ** automatiquement (manuel via Supabase console)
+
+### Assignation des rôles (Auth Trigger)
+
+Lors de l'inscription, le rôle est déterminé par `supabase/schema.sql:214-228` via le trigger `handle_new_user()` :
+
+```sql
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.users (id, email, role)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'role', 'conductor')::user_role
+  );
+  RETURN NEW;
+END;
+$$;
+```
+
+**Mécanisme** :
+1. Frontend envoie `{ role: 'garage' }` dans `auth.signUp()` metadata
+2. Trigger lit `NEW.raw_user_meta_data->>'role'` depuis Supabase Auth
+3. Si non fourni : **fallback à `'conductor'` par défaut**
+4. Créé dans `users` table avec le rôle
+
+**Implication** : Un conducteur inscrit en oubliant la métadonnée `role` sera `'conductor'` (safe default). Un garage **DOIT** explicitement envoyer `role: 'garage'`.
+
+### Enforcement via RLS (Policies)
+
+24 policies RLS (lignes 313-463 dans `supabase/schema.sql`) enforceent les rôles sur 9 tables :
+
+**Principe général** :
+- Chaque table `public.*` a **policies strictes** basées sur le rôle
+- Jamais de `SELECT *` accessible à tout le monde
+- Chaque rôle voit uniquement **ses propres données**
+
+**Exemple : Table `users`** (ne doit être visible que à soi-même + admins) :
+```sql
+CREATE POLICY "Users can view their own data"
+  ON public.users FOR SELECT
+  USING (auth.uid() = id OR private.is_admin());
+```
+
+**Exemple : Table `garages`** (conducteur voit tous, garage voit sien, admin voit tous) :
+```sql
+CREATE POLICY "Conductors can view all garages"
+  ON public.garages FOR SELECT
+  USING ((SELECT role FROM public.users WHERE id = auth.uid()) = 'conductor' 
+         OR private.is_admin());
+
+CREATE POLICY "Garages can view their own garage"
+  ON public.garages FOR SELECT
+  USING (auth.uid() = owner_user_id OR private.is_admin());
+```
+
+**Exemple : Table `quotes`** (conducteur voit les siennes, garage voit les réponses aux siennes, admin voit tous) :
+```sql
+CREATE POLICY "Conductors can view their own quotes"
+  ON public.quotes FOR SELECT
+  USING (conductor_user_id = auth.uid() OR private.is_admin());
+
+CREATE POLICY "Garages can view quotes they responded to"
+  ON public.quotes FOR SELECT
+  USING (EXISTS (
+    SELECT 1 FROM public.quote_responses qr
+    WHERE qr.quote_id = quotes.id
+      AND qr.garage_user_id = auth.uid()
+  ) OR private.is_admin());
+```
+
+### Helpers RLS dans `private` schema
+
+Trois fonctions dans `supabase/schema.sql:278-308` aident l'enforcement :
+
+**1. `private.is_admin()`** (ligne 278) :
+```sql
+CREATE FUNCTION private.is_admin()
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN (SELECT role = 'admin' FROM public.users WHERE id = auth.uid());
+END;
+$$;
+```
+Utilisée partout : `WHERE private.is_admin() OR ...`. Centralisé = une source de vérité pour "qui est admin".
+
+**2. `private.owns_garage(garage_id UUID)`** (ligne 287) :
+```sql
+CREATE FUNCTION private.owns_garage(garage_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.garages
+    WHERE id = garage_id AND owner_user_id = auth.uid()
+  );
+END;
+$$;
+```
+Utilisée : `WHERE private.owns_garage(id)` pour vérifier propriété garage.
+
+**3. `private.prevent_role_escalation()`** (trigger, ligne 291) :
+```sql
+CREATE OR REPLACE FUNCTION private.prevent_role_escalation()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  -- Conductors & garages cannot change their own role
+  IF NEW.role != OLD.role AND (SELECT role FROM public.users WHERE id = auth.uid()) != 'admin' THEN
+    RAISE EXCEPTION 'Only admins can change user roles';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+```
+
+**Rôle** : Empêche un conducteur de se transformer en admin ou un garage d'escalader ses permissions. Seul un admin peut changer les rôles.
+
+### Flux de données par rôle
+
+| Action | Conducteur | Garage | Admin |
+|--------|-----------|--------|-------|
+| Voir utilisateurs | Lui-même | Lui-même | Tous |
+| Voir garages | Tous (recherche) | Le sien | Tous |
+| Créer devis | ✅ Ses propres | ✗ | ✅ (test) |
+| Répondre devis | ✗ | ✅ Aux siens | ✅ (test) |
+| Modérer avis | ✗ | ✗ (seulement voir) | ✅ |
+| Suspendre garage | ✗ | ✗ | ✅ |
+| Accès admin dashboard | ✗ | ✗ | ✅ |
+
+### Points de vigilance
+
+**À l'inscription** :
+- Frontend DOIT envoyer `{ role: 'garage' }` si garage, sinon fallback `'conductor'`
+- Vérifier que `packages/shared/src/validators/` valide bien cette métadonnée Zod avant envoi
+
+**À chaque nouvelle table** :
+- Définir les policies RLS **AVANT** de déployer
+- Ajouter dans `supabase/migrations/` la migration versionnée
+- Tester que chaque rôle ne voit que ce qu'il doit voir
+- Respecter la checklist : RLS + grants + index sur colonnes filtrées
+
+**À chaque changement de rôle user** :
+- Seul un admin peut via Supabase console
+- Le trigger `prevent_role_escalation` bloque toute tentative côté application
+- Audit trail dans les logs Supabase si modification
+
+**Pour l'audit de sécurité** :
+- Lancer `SELECT * FROM (SELECT column_name, policy_name FROM pg_policies WHERE schemaname='public')` pour voir toutes les policies
+- Vérifier que `private.is_admin()` est utilisé dans toutes les opérations sensibles
+- Vérifier que aucune table n'a `FOR ALL` policy sans filtrage par rôle
+
+---
+
 ## Structure du projet (réelle)
 
 ### Apps
