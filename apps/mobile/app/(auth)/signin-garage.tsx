@@ -83,7 +83,7 @@ export default function SignInGarageScreen() {
         error={errors.password}
       />
 
-      <Pressable onPress={() => router.replace({ pathname: '/(auth)/forgot-password', params: { role: 'garage' } })} hitSlop={8}>
+      <Pressable onPress={() => router.push({ pathname: '/(auth)/forgot-password', params: { role: 'garage' } })} hitSlop={8}>
         <BodySm color={accent.base} weight="600" style={{ marginBottom: 16 }}>
           Mot de passe oublié ?
         </BodySm>
@@ -100,7 +100,7 @@ export default function SignInGarageScreen() {
 
       <View style={authStyles.altRow}>
         <BodySm color={fg.muted}>Pas encore de compte ?</BodySm>
-        <Pressable onPress={() => router.replace('/(auth)/signup-garage')} hitSlop={8}>
+        <Pressable onPress={() => router.push('/(auth)/signup-garage')} hitSlop={8}>
           <BodySm color={accent.base} weight="600"> S'inscrire</BodySm>
         </Pressable>
       </View>

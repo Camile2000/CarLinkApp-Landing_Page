@@ -252,7 +252,7 @@ export default function SignUpGarageScreen() {
 
       <View style={authStyles.altRow}>
         <BodySm color={fg.muted}>Déjà inscrit ?</BodySm>
-        <Pressable onPress={() => router.replace('/(auth)/signin-garage')} hitSlop={8}>
+        <Pressable onPress={() => router.back()} hitSlop={8}>
           <BodySm color={accent.base} weight="600"> Se connecter</BodySm>
         </Pressable>
       </View>
