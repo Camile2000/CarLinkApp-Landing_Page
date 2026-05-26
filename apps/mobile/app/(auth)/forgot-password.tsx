@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { Mail } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
 import { emailSchema } from '@carlink/shared/validators';
@@ -10,7 +10,8 @@ import { Caption } from '../../src/components/ui/Typography';
 import { fg } from '../../src/constants/theme';
 
 export default function ForgotPasswordScreen() {
-  const { role } = useLocalSearchParams<{ role?: string }>();
+  // Le paramètre `role` est récupéré par la page OTP via useLocalSearchParams
+  // après transmission en Phase 4. Pour l'instant, non utilisé ici.
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});

@@ -3,6 +3,7 @@ import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
+import { ToastProvider } from '../src/components/ui/ToastProvider';
 
 function RootLayoutContent() {
   const { session, profile, loading, profileError, signOut } = useAuth();
@@ -61,9 +62,11 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      <AuthProvider>
-        <RootLayoutContent />
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <RootLayoutContent />
+        </AuthProvider>
+      </ToastProvider>
     </SafeAreaProvider>
   );
 }
