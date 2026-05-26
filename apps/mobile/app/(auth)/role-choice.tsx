@@ -10,7 +10,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft, ArrowRight, Car, Check, Wrench } from 'lucide-react-native';
 import { Button } from '../../src/components/ui/Button';
-import { useToast } from '../../src/components/ui/ToastProvider';
 
 type Role = 'conductor' | 'garage';
 
@@ -47,7 +46,6 @@ const ROLES: RoleOption[] = [
 export default function RoleChoiceScreen() {
   const [selected, setSelected] = useState<Role | null>(null);
   const insets = useSafeAreaInsets();
-  const toast = useToast();
 
   const handleContinue = () => {
     if (selected === 'conductor') {
@@ -145,34 +143,6 @@ export default function RoleChoiceScreen() {
             trailingIcon={ArrowRight}
             fullWidth
           />
-
-          {/* [TEMP — Phase 1] Test du système de toast — à retirer après validation */}
-          <View style={s.toastTestRow}>
-            <Pressable
-              onPress={() => toast.success('Connexion réussie')}
-              style={[s.toastTestChip, { backgroundColor: 'rgba(31,138,76,0.85)' }]}
-            >
-              <Text style={s.toastTestTxt}>Success</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => toast.error('Email ou mot de passe incorrect')}
-              style={[s.toastTestChip, { backgroundColor: 'rgba(200,16,46,0.85)' }]}
-            >
-              <Text style={s.toastTestTxt}>Error</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => toast.warning('Votre garage est en attente de validation')}
-              style={[s.toastTestChip, { backgroundColor: 'rgba(201,122,14,0.85)' }]}
-            >
-              <Text style={s.toastTestTxt}>Warning</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => toast.info('Code expire dans 15 minutes')}
-              style={[s.toastTestChip, { backgroundColor: 'rgba(43,108,176,0.85)' }]}
-            >
-              <Text style={s.toastTestTxt}>Info</Text>
-            </Pressable>
-          </View>
         </View>
       </View>
     </View>
@@ -320,19 +290,6 @@ const s = StyleSheet.create({
     gap: 4,
     marginTop: 16,
   },
-  altWrap: {
-    alignSelf: 'center',
-    paddingVertical: 12,
-  },
-  altTxt: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  altTxtAccent: {
-    color: '#fff',
-    fontWeight: '700',
-  },
   badge: {
     position: 'absolute',
     top: 12,
@@ -363,23 +320,5 @@ const s = StyleSheet.create({
     fontWeight: '600',
     color: 'rgba(255,255,255,0.85)',
     letterSpacing: -0.05,
-  },
-  toastTestRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 10,
-  },
-  toastTestChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  toastTestTxt: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.3,
   },
 });
