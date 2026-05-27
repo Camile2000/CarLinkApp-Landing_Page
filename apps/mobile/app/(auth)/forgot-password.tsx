@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Mail } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
@@ -10,11 +10,15 @@ import { Caption } from '../../src/components/ui/Typography';
 import { fg } from '../../src/constants/theme';
 import { useToast } from '../../src/components/ui/ToastProvider';
 
+// Rate limit anti-enumeration: minimum 2s between two reset attempts
+const RESET_MIN_INTERVAL_MS = 2000;
+
 export default function ForgotPasswordScreen() {
   const { role } = useLocalSearchParams<{ role?: string }>();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const lastAttemptAt = useRef<number>(0);
   const toast = useToast();
 
   const setFieldError = (field: string, message: string | null) => {
@@ -40,6 +44,15 @@ export default function ForgotPasswordScreen() {
 
   const handleReset = async () => {
     setErrors({});
+
+    // Rate limit to prevent enumeration spam
+    const now = Date.now();
+    const sinceLast = now - lastAttemptAt.current;
+    if (sinceLast < RESET_MIN_INTERVAL_MS) {
+      toast.error('Veuillez patienter quelques secondes avant de réessayer.');
+      return;
+    }
+    lastAttemptAt.current = now;
 
     try {
       const validated = emailSchema.parse(email.trim());
