@@ -53,7 +53,7 @@ function RootLayoutContent() {
       <Stack.Screen name="(driver)" />
       <Stack.Screen name="(garage)" />
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="index" options={{ headerShown: true, title: 'CarLink' }} />
+      <Stack.Screen name="index" />
     </Stack>
   );
 }
