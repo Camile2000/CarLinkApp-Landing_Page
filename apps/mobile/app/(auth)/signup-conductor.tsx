@@ -224,7 +224,6 @@ export default function SignUpConductorScreen() {
           Keyboard.dismiss();
           setCityDropdownOpen(false);
         }}
-        activeOpacity={1}
       >
         <View style={{ flexDirection: 'row', gap: 10 }}>
         <Input
