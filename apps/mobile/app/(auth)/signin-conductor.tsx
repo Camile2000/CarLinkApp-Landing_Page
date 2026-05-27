@@ -42,22 +42,24 @@ export default function SignInConductorScreen() {
   const isOnCooldown = cooldownUntil !== null && Date.now() < cooldownUntil;
 
   const validateEmail = () => {
-    try {
-      credentialsSchema.parse({ email, password: 'temp' });
+    if (!email) {
       setErrors((prev) => {
         const next = { ...prev };
         delete next.email;
         return next;
       });
-    } catch (err: unknown) {
-      if (err instanceof Error && 'errors' in err && Array.isArray(err.errors)) {
-        const emailError = (err.errors as Array<{ path?: string[]; message: string }>).find(
-          (e) => e.path?.[0] === 'email'
-        );
-        if (emailError) {
-          setErrors((prev) => ({ ...prev, email: emailError.message }));
-        }
-      }
+      return;
+    }
+    const result = credentialsSchema.shape.email.safeParse(email);
+    if (result.success) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.email;
+        return next;
+      });
+    } else {
+      const message = result.error.issues[0]?.message || 'Email invalide';
+      setErrors((prev) => ({ ...prev, email: message }));
     }
   };
 
@@ -109,10 +111,10 @@ export default function SignInConductorScreen() {
       setCooldownUntil(null);
       toast.success('Connexion réussie');
     } catch (err: unknown) {
-      if (err instanceof Error && 'errors' in err && Array.isArray(err.errors)) {
+      if (err instanceof Error && 'issues' in err && Array.isArray(err.issues)) {
         const next: Record<string, string> = {};
-        (err.errors as Array<{ path?: string[]; message: string }>).forEach((e) => {
-          if (e.path) next[e.path[0]] = e.message;
+        (err.issues as Array<{ path?: Array<string | number>; message: string }>).forEach((e) => {
+          if (e.path && e.path.length > 0) next[String(e.path[0])] = e.message;
         });
         setErrors(next);
       }
