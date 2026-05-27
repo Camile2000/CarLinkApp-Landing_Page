@@ -46,6 +46,18 @@ Si une demande entre en conflit avec `SECURITY.md`, **alerte le client avant d'a
 
 ## Workflow Git
 
+### ⚡ Configuration active (session courante)
+**À partir de cette session, `claude/dev-mobile` est la branche de développement EXCLUSIVE.**
+- ✅ **Branch de développement local** : `claude/dev-mobile` (toutes les features, tous les fixes, tout le code)
+- ✅ **Branch stable** : `claude/stable-mobile` (pushs manuels quand code est validé et testé)
+- ❌ **`claude/cool-archimedes-IZnCb`** : SUPPRIMÉE/IGNORÉE complètement (branche feature obsolète)
+
+**Workflow cette session** : 
+1. Clone de `claude/dev-mobile` ou création locale si n'existe pas
+2. Code + test en local sur `claude/dev-mobile`
+3. À chaque étape validée : commit + push vers `origin/claude/dev-mobile`
+4. Quand code stable + approuvé client : merge manuel vers `claude/stable-mobile` (demande explicite)
+
 ### Branches pour le développement mobile (PRIORITAIRE)
 - **`claude/stable-mobile`** : Base stable et testée pour l'application mobile. Source de vérité pour la production mobile.
 - **`claude/dev-mobile`** : Branche de développement actif pour nouvelles features et fixes. Dérivée de `claude/stable-mobile`. Merge vers `claude/stable-mobile` uniquement après test et approbation client.
