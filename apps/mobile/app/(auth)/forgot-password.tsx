@@ -2,7 +2,8 @@ import React, { useRef, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Mail } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
-import { emailSchema } from '@carlink/shared/validators';
+import { emailSchema, checkEmailRole } from '@carlink/shared';
+import { SUPABASE_URL } from '@carlink/shared/env';
 import { AuthLayout, authStyles } from '../../src/components/ui/AuthLayout';
 import { Input } from '../../src/components/ui/Input';
 import { Button } from '../../src/components/ui/Button';
@@ -61,17 +62,15 @@ export default function ForgotPasswordScreen() {
       // If role parameter is provided, validate that the email belongs to the correct role
       if (role) {
         try {
-          const { data: emailRole, error: roleError } = await supabase.rpc('check_email_role', {
-            p_email: validated,
-          });
+          const result = await checkEmailRole(validated, SUPABASE_URL);
 
-          if (roleError) {
+          if (result.error) {
             toast.error('Échec de la vérification de l\'email');
             return;
           }
 
           // If email exists but role doesn't match, show neutral message without sending email
-          if (emailRole && emailRole !== role) {
+          if (result.role && result.role !== role) {
             toast.success('Si un compte existe avec cet email, un code a été envoyé.');
             setTimeout(() => {
               router.push({

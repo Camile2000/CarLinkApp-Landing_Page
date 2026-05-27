@@ -8,7 +8,9 @@ import {
   garagistSignUpSchema,
   passwordSchema,
   phoneSchema,
-} from '@carlink/shared/validators';
+  checkEmailStatus,
+} from '@carlink/shared';
+import { SUPABASE_URL } from '@carlink/shared/env';
 import { AuthLayout, authStyles } from '../../src/components/ui/AuthLayout';
 import { Input } from '../../src/components/ui/Input';
 import { Button } from '../../src/components/ui/Button';
@@ -169,24 +171,20 @@ export default function SignUpGarageScreen() {
 
       setLoading(true);
 
-      const { data: statusData, error: statusError } = await supabase.rpc('check_email_status', {
-        p_email: data.email,
-      });
+      const result = await checkEmailStatus(data.email, SUPABASE_URL);
 
-      if (statusError) {
+      if (result.error) {
         toast.error('Erreur lors de la vérification de l\'email');
         return;
       }
 
-      const emailStatus = statusData as string | null;
-
-      if (emailStatus === 'pending_verification') {
+      if (result.status === 'pending_verification') {
         toast.error('Un compte est déjà en cours de validation avec cet email. Veuillez vérifier le code reçu par email.');
         setFieldError('email', 'Email déjà en attente de vérification');
         return;
       }
 
-      if (emailStatus === 'verified') {
+      if (result.status === 'verified') {
         toast.error('Cet email est déjà associé à un compte.');
         setFieldError('email', 'Cet email est déjà utilisé');
         return;
