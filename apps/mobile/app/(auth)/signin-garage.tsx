@@ -115,7 +115,7 @@ export default function SignInGarageScreen() {
       const role = authData?.user?.user_metadata?.role;
       if (role === 'conductor') {
         await supabase.auth.signOut();
-        toast.error('Ce compte est associé à un espace conducteur. Veuillez utiliser la connexion conducteur.');
+        toast.error('Ce compte correspond à un profil conducteur. Veuillez utiliser l\'espace de connexion conducteur.');
         return;
       }
 

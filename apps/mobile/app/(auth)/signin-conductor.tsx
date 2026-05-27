@@ -115,7 +115,7 @@ export default function SignInConductorScreen() {
       const role = authData?.user?.user_metadata?.role;
       if (role === 'garage') {
         await supabase.auth.signOut();
-        toast.error('Ce compte est associé à un espace garagiste. Veuillez utiliser la connexion garagiste.');
+        toast.error('Ce compte correspond à un profil garagiste. Veuillez utiliser l\'espace de connexion garagiste.');
         return;
       }
 
