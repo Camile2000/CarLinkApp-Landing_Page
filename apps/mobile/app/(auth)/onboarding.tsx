@@ -112,7 +112,6 @@ export default function OnboardingScreen() {
     </View>
   );
 
-  const goSignIn = () => router.push('/(auth)/role-choice');
   const skip = () => router.push('/(auth)/role-choice');
 
   const ctaLabel = isLast
@@ -122,12 +121,6 @@ export default function OnboardingScreen() {
     : lang === 'fr'
       ? 'Suivant'
       : 'Next';
-
-  const altLabel = isLast
-    ? lang === 'fr'
-      ? "J'ai déjà un compte"
-      : 'I already have an account'
-    : null;
 
   return (
     <View style={s.root}>
@@ -203,11 +196,6 @@ export default function OnboardingScreen() {
           />
         </View>
 
-        {altLabel ? (
-          <Pressable onPress={goSignIn} hitSlop={8} style={s.altWrap}>
-            <Text style={s.altTxt}>{altLabel}</Text>
-          </Pressable>
-        ) : null}
       </View>
     </View>
   );
@@ -503,20 +491,6 @@ const s = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     width: '100%',
-  },
-  altWrap: {
-    alignSelf: 'center',
-    paddingVertical: 10,
-    marginTop: 2,
-  },
-  altTxt: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  altTxtAccent: {
-    color: '#fff',
-    fontWeight: '700',
   },
 });
 
