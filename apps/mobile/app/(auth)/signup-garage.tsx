@@ -1,15 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { router } from 'expo-router';
 import { Wrench } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
-import { garagistSignUpSchema } from '@carlink/shared/validators';
+import {
+  emailSchema,
+  garagistSignUpSchema,
+  passwordSchema,
+  phoneSchema,
+} from '@carlink/shared/validators';
 import { AuthLayout, authStyles } from '../../src/components/ui/AuthLayout';
 import { Input } from '../../src/components/ui/Input';
 import { Button } from '../../src/components/ui/Button';
 import { BodySm } from '../../src/components/ui/Typography';
 import { accent, fg } from '../../src/constants/theme';
 import { LightSpecChip } from '../../src/components/ui/DarkInput';
+import { useToast } from '../../src/components/ui/ToastProvider';
 
 const SPECIALTIES = [
   'Mécanique générale',
@@ -36,6 +42,88 @@ export default function SignUpGarageScreen() {
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const toast = useToast();
+
+  const setFieldError = (field: string, message: string | null) => {
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (message === null) {
+        if (!(field in next)) return prev;
+        delete next[field];
+        return next;
+      }
+      if (next[field] === message) return prev;
+      next[field] = message;
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (!passwordConfirm) {
+      setFieldError('password_confirm', null);
+      return;
+    }
+    if (passwordConfirm === password) {
+      setFieldError('password_confirm', null);
+    } else {
+      setFieldError('password_confirm', 'Les mots de passe ne correspondent pas');
+    }
+  }, [password, passwordConfirm]);
+
+  const validateGarageName = () => {
+    if (!garageName.trim()) return setFieldError('garage_name', null);
+    if (garageName.trim().length < 2) setFieldError('garage_name', 'Nom du garage requis');
+    else setFieldError('garage_name', null);
+  };
+
+  const validateManagerName = () => {
+    if (!managerName.trim()) return setFieldError('manager_name', null);
+    if (managerName.trim().length < 2) setFieldError('manager_name', 'Nom du gérant requis');
+    else setFieldError('manager_name', null);
+  };
+
+  const validateEmail = () => {
+    if (!email) return setFieldError('email', null);
+    const result = emailSchema.safeParse(email);
+    if (result.success) setFieldError('email', null);
+    else setFieldError('email', result.error.issues[0]?.message || 'Email invalide');
+  };
+
+  const validatePhone = () => {
+    if (!phone) return setFieldError('phone', null);
+    const result = phoneSchema.safeParse(phone);
+    if (result.success) setFieldError('phone', null);
+    else setFieldError('phone', result.error.issues[0]?.message || 'Téléphone invalide');
+  };
+
+  const validateCity = () => {
+    if (!city.trim()) return setFieldError('city', null);
+    if (city.trim().length < 2) setFieldError('city', 'Ville requise');
+    else setFieldError('city', null);
+  };
+
+  const validateAddress = () => {
+    if (!address.trim()) return setFieldError('address', null);
+    if (address.trim().length < 2) setFieldError('address', 'Adresse requise');
+    else setFieldError('address', null);
+  };
+
+  const validatePassword = () => {
+    if (!password) return setFieldError('password', null);
+    const result = passwordSchema.safeParse(password);
+    if (result.success) setFieldError('password', null);
+    else setFieldError('password', result.error.issues[0]?.message || 'Mot de passe invalide');
+  };
+
+  const passwordChecks = {
+    length: password.length >= 6,
+    upper: /[A-Z]/.test(password),
+    digit: /[0-9]/.test(password),
+  };
+
+  const passwordHelperText = password
+    ? `${passwordChecks.length ? '✓' : '○'} 6 caractères   ${passwordChecks.upper ? '✓' : '○'} Majuscule   ${passwordChecks.digit ? '✓' : '○'} Chiffre`
+    : '6 caractères minimum, dont 1 majuscule et 1 chiffre.';
 
   const toggleSpec = (spec: string) => {
     setSpecialties((prev) =>
@@ -77,35 +165,40 @@ export default function SignUpGarageScreen() {
       });
 
       if (error) {
-        if (error.message.includes('already registered')) {
-          setErrors({ email: 'Cet email est déjà utilisé' });
+        if (error.message.toLowerCase().includes('already registered')) {
+          toast.error('Cet email est déjà utilisé');
+          setFieldError('email', 'Cet email est déjà utilisé');
         } else {
-          setErrors({ form: error.message });
+          toast.error(error.message);
         }
         return;
       }
 
-      // Les infos garage sont passées en params jusqu'à OTP qui fera
-      // l'INSERT dans public.garages après vérification de l'email.
-      router.push({
-        pathname: '/(auth)/otp',
-        params: {
-          email: data.email,
-          type: 'signup',
-          role: 'garage',
-          garage_name: data.garage_name,
-          phone: data.phone,
-          city: data.city,
-          neighborhood: data.neighborhood ?? '',
-          address: data.address,
-          specialties: JSON.stringify(data.specialties),
-        },
-      });
+      toast.success('Inscription réussie. Vérifiez votre email.');
+      setTimeout(() => {
+        router.push({
+          pathname: '/(auth)/otp',
+          params: {
+            email: data.email,
+            type: 'signup',
+            role: 'garage',
+            garage_name: data.garage_name,
+            phone: data.phone,
+            city: data.city,
+            neighborhood: data.neighborhood ?? '',
+            address: data.address,
+            specialties: JSON.stringify(data.specialties),
+          },
+        });
+      }, 500);
     } catch (err: unknown) {
-      if (err instanceof Error && 'errors' in err && Array.isArray(err.errors)) {
+      if (err instanceof Error && 'issues' in err && Array.isArray(err.issues)) {
+        const issuesArr = err.issues as Array<{ path?: Array<string | number>; message: string }>;
+        const firstMsg = issuesArr[0]?.message || 'Erreur de validation';
+        toast.error(firstMsg);
         const next: Record<string, string> = {};
-        (err.errors as Array<{ path?: string[]; message: string }>).forEach((e) => {
-          if (e.path) next[e.path[0]] = e.message;
+        issuesArr.forEach((e) => {
+          if (e.path && e.path.length > 0) next[String(e.path[0])] = e.message;
         });
         setErrors(next);
       }
@@ -113,6 +206,18 @@ export default function SignUpGarageScreen() {
       setLoading(false);
     }
   };
+
+  const hasFieldErrors = Object.keys(errors).length > 0;
+  const allFieldsFilled =
+    !!garageName.trim() &&
+    !!managerName.trim() &&
+    !!email.trim() &&
+    !!phone.trim() &&
+    !!city.trim() &&
+    !!address.trim() &&
+    specialties.length > 0 &&
+    !!password &&
+    !!passwordConfirm;
 
   return (
     <AuthLayout
@@ -123,12 +228,6 @@ export default function SignUpGarageScreen() {
       title="Créer mon compte garagiste"
       lead="Renseignez les bases — vous compléterez le profil ensuite."
     >
-      {errors.form ? (
-        <View style={authStyles.errorBanner}>
-          <BodySm color="#fff" weight="500">{errors.form}</BodySm>
-        </View>
-      ) : null}
-
       <Input
         label="Nom du garage"
         value={garageName}
@@ -136,6 +235,7 @@ export default function SignUpGarageScreen() {
         placeholder="Garage Étoile Bonapriso"
         autoCapitalize="words"
         error={errors.garage_name}
+        onBlur={validateGarageName}
       />
 
       <Input
@@ -145,27 +245,31 @@ export default function SignUpGarageScreen() {
         placeholder="Pascal Mbarga"
         autoComplete="name"
         error={errors.manager_name}
+        onBlur={validateManagerName}
       />
 
       <Input
         label="Email"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(t) => setEmail(t.trim())}
         placeholder="contact@garageetoile.cm"
         keyboardType="email-address"
         autoCapitalize="none"
         autoComplete="email"
         error={errors.email}
+        onBlur={validateEmail}
       />
 
       <Input
         label="Téléphone"
         value={phone}
-        onChangeText={setPhone}
-        placeholder="+237 6 99 23 41 87"
+        onChangeText={(t) => setPhone(t.replace(/\D/g, '').slice(0, 9))}
+        placeholder="6XXXXXXXX"
         keyboardType="phone-pad"
         autoComplete="tel"
+        helper="Format Cameroun : 6XXXXXXXX (9 chiffres, commence par 6)"
         error={errors.phone}
+        onBlur={validatePhone}
       />
 
       <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -176,6 +280,7 @@ export default function SignUpGarageScreen() {
           placeholder="Douala"
           autoCapitalize="words"
           error={errors.city}
+          onBlur={validateCity}
           style={{ flex: 1 }}
         />
         <Input
@@ -196,6 +301,7 @@ export default function SignUpGarageScreen() {
         placeholder="Rue 1.234, Bonapriso"
         autoCapitalize="words"
         error={errors.address}
+        onBlur={validateAddress}
       />
 
       <View style={{ marginBottom: 14 }}>
@@ -228,8 +334,9 @@ export default function SignUpGarageScreen() {
         onChangeText={setPassword}
         placeholder="••••••••"
         secureTextEntry
-        helper="8 caractères minimum, dont 1 majuscule et 1 chiffre."
+        helper={passwordHelperText}
         error={errors.password}
+        onBlur={validatePassword}
       />
 
       <Input
@@ -245,7 +352,7 @@ export default function SignUpGarageScreen() {
         label="Continuer vers la vérification"
         onPress={handleSignUp}
         loading={loading}
-        disabled={loading}
+        disabled={loading || !allFieldsFilled || hasFieldErrors}
         fullWidth
         style={authStyles.fullButton}
       />
