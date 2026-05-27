@@ -1,0 +1,36 @@
+{
+  "project": {
+    "name": "CarLink Mobile (Expo + Supabase)",
+    "description": "Application mobile iOS/Android pour gestionnaire de garages automobiles et conducteurs",
+    "type": "mobile"
+  },
+  "development": {
+    "active_branch": "claude/dev-mobile",
+    "stable_branch": "claude/stable-mobile",
+    "deprecated_branches": ["claude/cool-archimedes-IZnCb"],
+    "note": "claude/dev-mobile est la branche exclusive de développement pour cette session. Tous les commits et pushs vont vers cette branche. Merge manuel vers claude/stable-mobile uniquement sur demande explicite du client.",
+    "push_strategy": "push -u origin claude/dev-mobile"
+  },
+  "git": {
+    "commit_template": "type(scope): description\n\nhttps://claude.ai/code/session_<session-id>",
+    "require_commit_message": true,
+    "branches_protected": ["main", "staging", "dev", "claude/stable-mobile"]
+  },
+  "workflow": {
+    "phases": [
+      {
+        "phase": 1,
+        "name": "Toast System (PHASE 1)",
+        "status": "✅ COMPLETE",
+        "description": "Toast.tsx, ToastProvider.tsx, intégration dans _layout.tsx"
+      },
+      {
+        "phase": 2,
+        "name": "Auth Integration with Toasts (PHASE 2)",
+        "status": "🔄 IN PROGRESS",
+        "description": "7 étapes testables (signin, signup, forgot-password, otp, reset-password)",
+        "current_step": "ÉTAPE 1 - signin-conductor.tsx"
+      }
+    ]
+  }
+}

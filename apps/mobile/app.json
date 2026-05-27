@@ -7,10 +7,10 @@
     "orientation": "portrait",
     "scheme": "carlink",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "splash": {
+      "image": "./assets/logo-mark-white.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0B1F3A"
+      "backgroundColor": "#0A0E15"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -20,7 +20,8 @@
     "android": {
       "package": "com.carlink.app",
       "adaptiveIcon": {
-        "backgroundColor": "#0B1F3A"
+        "foregroundImage": "./assets/logo-mark-white.png",
+        "backgroundColor": "#0A0E15"
       }
     },
     "web": {

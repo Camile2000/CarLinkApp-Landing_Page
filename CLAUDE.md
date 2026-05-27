@@ -1,5 +1,19 @@
 # CLAUDE.md — Instructions projet CarLink
 
+## Langue et méthode de travail (permanent)
+
+- **Toujours répondre en français.** Les termes techniques (noms de fichiers, commandes, concepts dev) restent en anglais.
+- **Méthode obligatoire avant toute action** :
+  1. **Analyser** le problème
+  2. **Expliquer** ce qui se passe et pourquoi
+  3. **Proposer** une ou plusieurs solutions avec les raisons de chaque choix
+  4. **Attendre la décision du client** avant d'implémenter quoi que ce soit
+- **IMPORTANT : Ne jamais enchaîner les tâches sans autorisation explicite du client.** Une tâche finie = demander la suite.
+- **Mode de travail obligatoire** : Toujours préférer une approche d'explication et de demande d'avis avant action. Ne pas supposer les intentions du client.
+- Ne jamais coder ou modifier des fichiers sans que le client ait validé la proposition.
+
+---
+
 ## Rôle Security Engineer (permanent)
 
 Tu assures le rôle de **Security Engineer** sur ce projet. Le client n'a pas
@@ -32,8 +46,25 @@ Si une demande entre en conflit avec `SECURITY.md`, **alerte le client avant d'a
 
 ## Workflow Git
 
-- Branches actives : `claude/mobile` · `claude/web-admin` · `claude/backend-supabase` → PR → `dev` → `staging` → `main`.
-- **Jamais de push direct sur `main`, `staging`, `dev`.**
+### ⚡ Configuration active (session courante)
+**À partir de cette session, `claude/dev-mobile` est la branche de développement EXCLUSIVE.**
+- ✅ **Branch de développement local** : `claude/dev-mobile` (toutes les features, tous les fixes, tout le code)
+- ✅ **Branch stable** : `claude/stable-mobile` (pushs manuels quand code est validé et testé)
+- ❌ **`claude/cool-archimedes-IZnCb`** : SUPPRIMÉE/IGNORÉE complètement (branche feature obsolète)
+
+**Workflow cette session** : 
+1. Clone de `claude/dev-mobile` ou création locale si n'existe pas
+2. Code + test en local sur `claude/dev-mobile`
+3. À chaque étape validée : commit + push vers `origin/claude/dev-mobile`
+4. Quand code stable + approuvé client : merge manuel vers `claude/stable-mobile` (demande explicite)
+
+### Branches pour le développement mobile (PRIORITAIRE)
+- **`claude/stable-mobile`** : Base stable et testée pour l'application mobile. Source de vérité pour la production mobile.
+- **`claude/dev-mobile`** : Branche de développement actif pour nouvelles features et fixes. Dérivée de `claude/stable-mobile`. Merge vers `claude/stable-mobile` uniquement après test et approbation client.
+
+### Workflow général
+- Branches actives : `claude/stable-mobile` · `claude/dev-mobile` · `claude/web-admin` · `claude/backend-supabase` → PR → `dev` → `staging` → `main`.
+- **Jamais de push direct sur `main`, `staging`, `dev`, `claude/stable-mobile`.**
 - Toute PR déclenche la CI complète (security + lint + typecheck + build).
 - Une PR = un objectif précis. Pas de PR qui mélange mobile + web + RLS + storage.
 - Toute PR doit répondre aux 7 questions du template (voir [`docs/gouvernance.md`](./docs/gouvernance.md)).

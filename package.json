@@ -20,7 +20,8 @@
   },
   "dependencies": {
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "react-native-web": "^0.21.2"
   },
   "overrides": {
     "react": "19.1.0",
@@ -31,7 +32,7 @@
     "fast-xml-parser": "^5.7.0"
   },
   "devDependencies": {
-    "next": "15.5.18",
-    "eslint-config-next": "15.5.18"
+    "eslint-config-next": "15.5.18",
+    "next": "15.5.18"
   }
 }
