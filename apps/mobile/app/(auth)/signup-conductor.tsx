@@ -252,6 +252,7 @@ export default function SignUpConductorScreen() {
         autoComplete="email"
         error={errors.email}
         onBlur={validateEmail}
+        onFocus={() => setCityDropdownOpen(false)}
       />
 
       <Input
@@ -264,6 +265,7 @@ export default function SignUpConductorScreen() {
         error={errors.phone}
         helper="Format Cameroun : 6XXXXXXXX (9 chiffres, commence par 6)"
         onBlur={validatePhone}
+        onFocus={() => setCityDropdownOpen(false)}
       />
 
       <View style={dd.wrapper}>
@@ -316,6 +318,7 @@ export default function SignUpConductorScreen() {
           placeholder="Ex : Limbé"
           autoCapitalize="words"
           onBlur={validateCity}
+          onFocus={() => setCityDropdownOpen(false)}
         />
       ) : null}
 
@@ -328,6 +331,7 @@ export default function SignUpConductorScreen() {
         helper={passwordHelperText}
         error={errors.password}
         onBlur={validatePassword}
+        onFocus={() => setCityDropdownOpen(false)}
       />
 
       <Input
@@ -337,6 +341,7 @@ export default function SignUpConductorScreen() {
         placeholder="••••••••"
         secureTextEntry
         error={errors.password_confirm}
+        onFocus={() => setCityDropdownOpen(false)}
       />
 
       <Button

@@ -35,6 +35,7 @@ interface InputProps {
   trailingIcon?: LucideIcon;
   onTrailingIconPress?: () => void;
   onBlur?: () => void;
+  onFocus?: () => void;
   style?: ViewStyle;
 }
 
@@ -54,6 +55,7 @@ export function Input({
   trailingIcon: TrailingIcon,
   onTrailingIconPress,
   onBlur: onBlurProp,
+  onFocus: onFocusProp,
   style,
 }: InputProps) {
   const [focused, setFocused] = useState(false);
@@ -90,7 +92,10 @@ export function Input({
           autoCapitalize={autoCapitalize}
           autoComplete={autoComplete}
           editable={editable}
-          onFocus={() => setFocused(true)}
+          onFocus={() => {
+            setFocused(true);
+            onFocusProp?.();
+          }}
           onBlur={() => {
             setFocused(false);
             onBlurProp?.();
@@ -106,10 +111,9 @@ export function Input({
           </Pressable>
         ) : null}
       </View>
+      {helper ? <Text style={styles.helper}>{helper}</Text> : null}
       {hasError ? (
         <Text style={styles.error}>{error}</Text>
-      ) : helper ? (
-        <Text style={styles.helper}>{helper}</Text>
       ) : null}
     </View>
   );
