@@ -41,6 +41,26 @@ export default function SignInConductorScreen() {
 
   const isOnCooldown = cooldownUntil !== null && Date.now() < cooldownUntil;
 
+  const validateEmail = () => {
+    try {
+      credentialsSchema.parse({ email, password: 'temp' });
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.email;
+        return next;
+      });
+    } catch (err: unknown) {
+      if (err instanceof Error && 'errors' in err && Array.isArray(err.errors)) {
+        const emailError = (err.errors as Array<{ path?: string[]; message: string }>).find(
+          (e) => e.path?.[0] === 'email'
+        );
+        if (emailError) {
+          setErrors((prev) => ({ ...prev, email: emailError.message }));
+        }
+      }
+    }
+  };
+
   const handleSignIn = async () => {
     if (isOnCooldown) {
       toast.error(`Trop de tentatives. Réessayez dans ${Math.ceil(cooldownRemaining / 60)} min`);
@@ -122,6 +142,7 @@ export default function SignInConductorScreen() {
         autoCapitalize="none"
         autoComplete="email"
         error={errors.email}
+        onBlur={validateEmail}
       />
 
       <Input

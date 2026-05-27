@@ -34,6 +34,7 @@ interface InputProps {
   leadingIcon?: LucideIcon;
   trailingIcon?: LucideIcon;
   onTrailingIconPress?: () => void;
+  onBlur?: () => void;
   style?: ViewStyle;
 }
 
@@ -52,6 +53,7 @@ export function Input({
   leadingIcon: LeadingIcon,
   trailingIcon: TrailingIcon,
   onTrailingIconPress,
+  onBlur: onBlurProp,
   style,
 }: InputProps) {
   const [focused, setFocused] = useState(false);
@@ -89,7 +91,10 @@ export function Input({
           autoComplete={autoComplete}
           editable={editable}
           onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
+          onBlur={() => {
+            setFocused(false);
+            onBlurProp?.();
+          }}
         />
         {secureTextEntry ? (
           <Pressable onPress={() => setHidden((h) => !h)} hitSlop={8}>
