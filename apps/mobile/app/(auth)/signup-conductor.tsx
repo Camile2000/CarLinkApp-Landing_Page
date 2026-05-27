@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Car, Check, ChevronDown } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
@@ -219,7 +219,14 @@ export default function SignUpConductorScreen() {
       title="Créer mon compte"
       lead="Quelques informations pour vous proposer les meilleurs garages."
     >
-      <View style={{ flexDirection: 'row', gap: 10 }}>
+      <Pressable
+        onPress={() => {
+          Keyboard.dismiss();
+          setCityDropdownOpen(false);
+        }}
+        activeOpacity={1}
+      >
+        <View style={{ flexDirection: 'row', gap: 10 }}>
         <Input
           label="Prénom"
           value={firstName}
@@ -228,6 +235,7 @@ export default function SignUpConductorScreen() {
           autoComplete="given-name"
           error={errors.first_name}
           onBlur={validateFirstName}
+          onFocus={() => setCityDropdownOpen(false)}
           style={{ flex: 1 }}
         />
         <Input
@@ -238,6 +246,7 @@ export default function SignUpConductorScreen() {
           autoComplete="family-name"
           error={errors.last_name}
           onBlur={validateLastName}
+          onFocus={() => setCityDropdownOpen(false)}
           style={{ flex: 1 }}
         />
       </View>
@@ -353,12 +362,13 @@ export default function SignUpConductorScreen() {
         style={authStyles.fullButton}
       />
 
-      <View style={authStyles.altRow}>
-        <BodySm color={fg.muted}>Déjà un compte ?</BodySm>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
-          <BodySm color={accent.base} weight="600"> Se connecter</BodySm>
-        </Pressable>
-      </View>
+        <View style={authStyles.altRow}>
+          <BodySm color={fg.muted}>Déjà un compte ?</BodySm>
+          <Pressable onPress={() => router.back()} hitSlop={8}>
+            <BodySm color={accent.base} weight="600"> Se connecter</BodySm>
+          </Pressable>
+        </View>
+      </Pressable>
     </AuthLayout>
   );
 }
