@@ -9,8 +9,16 @@ import { z } from 'zod';
 export const uuidSchema = z.string().uuid();
 export const phoneSchema = z
   .string()
-  .regex(/^\+?[0-9\s\-().]{7,20}$/, 'Numéro de téléphone invalide');
+  .regex(/^6\d{8}$/, 'Format requis : 6XXXXXXXX (9 chiffres, commence par 6)');
 export const emailSchema = z.string().email('Email invalide');
+export const nameSchema = z
+  .string()
+  .min(1, 'Champ requis')
+  .max(50, '50 caractères maximum')
+  .regex(
+    /^[A-Za-zÀ-ÖØ-öø-ÿ' -]+$/,
+    'Lettres, tirets, apostrophes et espaces uniquement',
+  );
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -25,7 +33,7 @@ export const signUpSchema = z.object({
 
 export const passwordSchema = z
   .string()
-  .min(8, 'Minimum 8 caractères')
+  .min(6, 'Minimum 6 caractères')
   .max(128, 'Maximum 128 caractères')
   .regex(/[A-Z]/, 'Doit contenir au moins une majuscule')
   .regex(/[0-9]/, 'Doit contenir au moins un chiffre');
@@ -142,8 +150,8 @@ export const garageSignUpSchema = z.object({
 // concaténation (firstName + ' ' + lastName) avant l'appel à signUp.
 
 export const conductorSignUpSchema = z.object({
-  first_name: z.string().min(1, 'Prénom requis').max(50),
-  last_name: z.string().min(1, 'Nom requis').max(50),
+  first_name: nameSchema,
+  last_name: nameSchema,
   email: emailSchema,
   phone: phoneSchema,
   city: z.string().min(2, 'Ville requise').max(100),

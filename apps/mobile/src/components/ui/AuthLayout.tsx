@@ -43,7 +43,7 @@ export function AuthLayout({
   const hc = HERO_COLORS[heroTone];
 
   return (
-    <Screen scroll>
+    <Screen scroll keyboardAvoiding>
       <View style={styles.container}>
         {onBack ? (
           <Pressable onPress={onBack} style={styles.back} hitSlop={8}>
