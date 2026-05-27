@@ -63,6 +63,18 @@ export default function SignInConductorScreen() {
     }
   };
 
+  const validatePassword = () => {
+    if (!password) {
+      setErrors((prev) => ({ ...prev, password: 'Mot de passe requis' }));
+    } else {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.password;
+        return next;
+      });
+    }
+  };
+
   const handleSignIn = async () => {
     if (isOnCooldown) {
       toast.error(`Trop de tentatives. Réessayez dans ${Math.ceil(cooldownRemaining / 60)} min`);
@@ -138,7 +150,7 @@ export default function SignInConductorScreen() {
       <Input
         label="Email"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(text) => setEmail(text.trim())}
         placeholder="vous@exemple.com"
         keyboardType="email-address"
         autoCapitalize="none"
@@ -154,6 +166,7 @@ export default function SignInConductorScreen() {
         placeholder="••••••••"
         secureTextEntry
         error={errors.password}
+        onBlur={validatePassword}
       />
 
       <Pressable onPress={() => router.push({ pathname: '/(auth)/forgot-password', params: { role: 'conductor' } })} hitSlop={8}>
@@ -166,7 +179,7 @@ export default function SignInConductorScreen() {
         label={buttonLabel}
         onPress={handleSignIn}
         loading={loading}
-        disabled={loading || isOnCooldown}
+        disabled={loading || isOnCooldown || !email.trim() || !password}
         fullWidth
         style={authStyles.fullButton}
       />
