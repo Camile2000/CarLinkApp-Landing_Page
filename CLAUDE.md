@@ -8,6 +8,8 @@
   2. **Expliquer** ce qui se passe et pourquoi
   3. **Proposer** une ou plusieurs solutions avec les raisons de chaque choix
   4. **Attendre la décision du client** avant d'implémenter quoi que ce soit
+- **IMPORTANT : Ne jamais enchaîner les tâches sans autorisation explicite du client.** Une tâche finie = demander la suite.
+- **Mode de travail obligatoire** : Toujours préférer une approche d'explication et de demande d'avis avant action. Ne pas supposer les intentions du client.
 - Ne jamais coder ou modifier des fichiers sans que le client ait validé la proposition.
 
 ---
@@ -44,8 +46,13 @@ Si une demande entre en conflit avec `SECURITY.md`, **alerte le client avant d'a
 
 ## Workflow Git
 
-- Branches actives : `claude/mobile` · `claude/web-admin` · `claude/backend-supabase` → PR → `dev` → `staging` → `main`.
-- **Jamais de push direct sur `main`, `staging`, `dev`.**
+### Branches pour le développement mobile (PRIORITAIRE)
+- **`claude/stable-mobile`** : Base stable et testée pour l'application mobile. Source de vérité pour la production mobile.
+- **`claude/dev-mobile`** : Branche de développement actif pour nouvelles features et fixes. Dérivée de `claude/stable-mobile`. Merge vers `claude/stable-mobile` uniquement après test et approbation client.
+
+### Workflow général
+- Branches actives : `claude/stable-mobile` · `claude/dev-mobile` · `claude/web-admin` · `claude/backend-supabase` → PR → `dev` → `staging` → `main`.
+- **Jamais de push direct sur `main`, `staging`, `dev`, `claude/stable-mobile`.**
 - Toute PR déclenche la CI complète (security + lint + typecheck + build).
 - Une PR = un objectif précis. Pas de PR qui mélange mobile + web + RLS + storage.
 - Toute PR doit répondre aux 7 questions du template (voir [`docs/gouvernance.md`](./docs/gouvernance.md)).
