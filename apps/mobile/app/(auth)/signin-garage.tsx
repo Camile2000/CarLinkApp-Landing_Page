@@ -179,7 +179,7 @@ export default function SignInGarageScreen() {
         label={buttonLabel}
         onPress={handleSignIn}
         loading={loading}
-        disabled={loading || isOnCooldown || !email.trim() || !password}
+        disabled={loading || isOnCooldown || !email.trim() || !password || !!errors.email || !!errors.password}
         fullWidth
         style={authStyles.fullButton}
       />
