@@ -111,11 +111,6 @@ export default function SignUpGarageScreen() {
     else setFieldError('phone', result.error.issues[0]?.message || 'Téléphone invalide');
   };
 
-  const validateCity = () => {
-    if (!citySelected) return setFieldError('city', null);
-    setFieldError('city', null);
-  };
-
   const validateAddress = () => {
     if (!address.trim()) return setFieldError('address', null);
     if (address.trim().length < 2) setFieldError('address', 'Adresse requise');
@@ -228,7 +223,6 @@ export default function SignUpGarageScreen() {
     } catch (err: unknown) {
       if (err instanceof Error && 'issues' in err && Array.isArray(err.issues)) {
         const issuesArr = err.issues as Array<{ path?: Array<string | number>; message: string }>;
-        const firstMsg = issuesArr[0]?.message || 'Erreur de validation';
         const next: Record<string, string> = {};
         issuesArr.forEach((e) => {
           if (e.path && e.path.length > 0) next[String(e.path[0])] = e.message;
