@@ -279,3 +279,60 @@ jobs:
             echo "✅ Build Web passed"
             exit 0
           fi
+
+  # ─────────────────────────────────────────────────────────────
+  # 5. BUILD MOBILE
+  #    - Déclenché seulement si apps/mobile ou packages/shared changent
+  #    - Attend lint-typecheck ET security (pas de build si audit échoue)
+  # ─────────────────────────────────────────────────────────────
+  build-mobile:
+    name: Build Mobile
+    runs-on: ubuntu-latest
+    needs: [changes, lint-typecheck, security]
+    if: needs.changes.outputs.mobile == 'true'
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build mobile (Expo production)
+        run: npm run build:mobile
+
+      - name: Build report
+        if: success()
+        run: |
+          echo "## 📱 Mobile Build" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Status**: ✅ Succès" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Workspace**: apps/mobile" >> "$GITHUB_STEP_SUMMARY"
+
+  # ─────────────────────────────────────────────────────────────
+  # 5b. BUILD MOBILE FINAL (Status Check Reporter)
+  #    - Assure que le status check "Build Mobile" est toujours reporté
+  #    - Même quand build-mobile est skipped (pas de changements mobile/shared)
+  # ─────────────────────────────────────────────────────────────
+  build-mobile-final:
+    name: Build Mobile
+    runs-on: ubuntu-latest
+    needs: [build-mobile]
+    if: always()
+    steps:
+      - name: Report Build Mobile status
+        run: |
+          BUILD_RESULT="${{ needs.build-mobile.result }}"
+          if [ "$BUILD_RESULT" = "failure" ]; then
+            echo "❌ Build Mobile failed"
+            exit 1
+          elif [ "$BUILD_RESULT" = "skipped" ]; then
+            echo "⏭️ Build Mobile skipped (no mobile/shared changes detected)"
+            exit 0
+          else
+            echo "✅ Build Mobile passed"
+            exit 0
+          fi
