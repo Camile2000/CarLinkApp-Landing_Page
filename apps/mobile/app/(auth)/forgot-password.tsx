@@ -55,7 +55,7 @@ export default function ForgotPasswordScreen() {
         return;
       }
 
-      toast.success('Un code a été envoyé à votre email.');
+      toast.success('Si un compte existe avec cet email, un code a été envoyé.');
       setTimeout(() => {
         router.push({
           pathname: '/(auth)/otp',
@@ -65,8 +65,6 @@ export default function ForgotPasswordScreen() {
     } catch (err: unknown) {
       if (err instanceof Error && 'issues' in err && Array.isArray(err.issues)) {
         const issuesArr = err.issues as Array<{ path?: Array<string | number>; message: string }>;
-        const firstMsg = issuesArr[0]?.message || 'Email invalide';
-        toast.error(firstMsg);
         const next: Record<string, string> = {};
         issuesArr.forEach((e) => {
           if (e.path && e.path.length > 0) next[String(e.path[0])] = e.message;
