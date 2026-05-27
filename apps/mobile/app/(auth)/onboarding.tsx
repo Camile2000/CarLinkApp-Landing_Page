@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import {
+  Animated,
   Dimensions,
   FlatList,
   Image,
@@ -73,6 +74,7 @@ export default function OnboardingScreen() {
   const [lang, setLang] = useState<Lang>('fr');
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<SlideText>>(null);
+  const scrollX = useRef(new Animated.Value(0)).current;
 
   const isLast = index === SLIDES.length - 1;
 
@@ -159,7 +161,7 @@ export default function OnboardingScreen() {
           </Pressable>
         </View>
 
-        <FlatList
+        <Animated.FlatList
           ref={listRef}
           data={SLIDES}
           renderItem={renderSlide}
@@ -167,6 +169,10 @@ export default function OnboardingScreen() {
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            { useNativeDriver: false },
+          )}
           onMomentumScrollEnd={onMomentumEnd}
           scrollEventThrottle={16}
           getItemLayout={(_, i) => ({
@@ -179,12 +185,33 @@ export default function OnboardingScreen() {
 
         <View style={[s.footer, isLast && s.footerLast]}>
           <View style={s.dots}>
-            {SLIDES.map((_, i) => (
-              <View
-                key={i}
-                style={[s.dot, i === index && s.dotOn]}
-              />
-            ))}
+            {SLIDES.map((_, i) => {
+              const inputRange = [
+                (i - 1) * SCREEN_WIDTH,
+                i * SCREEN_WIDTH,
+                (i + 1) * SCREEN_WIDTH,
+              ];
+              const width = scrollX.interpolate({
+                inputRange,
+                outputRange: [6, 22, 6],
+                extrapolate: 'clamp',
+              });
+              const backgroundColor = scrollX.interpolate({
+                inputRange,
+                outputRange: [
+                  'rgba(255,255,255,0.22)',
+                  '#C8102E',
+                  'rgba(255,255,255,0.22)',
+                ],
+                extrapolate: 'clamp',
+              });
+              return (
+                <Animated.View
+                  key={i}
+                  style={[s.dot, { width, backgroundColor }]}
+                />
+              );
+            })}
           </View>
           <Button
             label={ctaLabel}
