@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Mail } from 'lucide-react-native';
 import { supabase } from '@carlink/shared/supabase/client';
 import { emailSchema } from '@carlink/shared/validators';
@@ -11,8 +11,7 @@ import { fg } from '../../src/constants/theme';
 import { useToast } from '../../src/components/ui/ToastProvider';
 
 export default function ForgotPasswordScreen() {
-  // Le paramètre `role` est récupéré par la page OTP via useLocalSearchParams
-  // après transmission en Phase 4. Pour l'instant, non utilisé ici.
+  const { role } = useLocalSearchParams<{ role?: string }>();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -45,6 +44,35 @@ export default function ForgotPasswordScreen() {
     try {
       const validated = emailSchema.parse(email.trim());
       setLoading(true);
+
+      // If role parameter is provided, validate that the email belongs to the correct role
+      if (role) {
+        try {
+          const { data: emailRole, error: roleError } = await supabase.rpc('check_email_role', {
+            p_email: validated,
+          });
+
+          if (roleError) {
+            toast.error('Échec de la vérification de l\'email');
+            return;
+          }
+
+          // If email exists but role doesn't match, show neutral message without sending email
+          if (emailRole && emailRole !== role) {
+            toast.success('Si un compte existe avec cet email, un code a été envoyé.');
+            setTimeout(() => {
+              router.push({
+                pathname: '/(auth)/otp',
+                params: { email: validated, type: 'recovery' },
+              });
+            }, 500);
+            return;
+          }
+        } catch (err) {
+          toast.error('Échec de la vérification de l\'email');
+          return;
+        }
+      }
 
       const { error } = await supabase.auth.resetPasswordForEmail(validated, {
         redirectTo: 'carlink://reset-password',

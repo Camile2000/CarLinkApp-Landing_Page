@@ -263,7 +263,13 @@ export default function SignUpGarageScreen() {
       title="Créer mon compte garagiste"
       lead="Renseignez les bases — vous compléterez le profil ensuite."
     >
-      <Input
+      <Pressable
+        onPress={() => {
+          Keyboard.dismiss();
+          setCityDropdownOpen(false);
+        }}
+      >
+        <Input
         label="Nom du garage"
         value={garageName}
         onChangeText={setGarageName}
@@ -429,12 +435,13 @@ export default function SignUpGarageScreen() {
         style={authStyles.fullButton}
       />
 
-      <View style={authStyles.altRow}>
-        <BodySm color={fg.muted}>Déjà inscrit ?</BodySm>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
-          <BodySm color={accent.base} weight="600"> Se connecter</BodySm>
-        </Pressable>
-      </View>
+        <View style={authStyles.altRow}>
+          <BodySm color={fg.muted}>Déjà inscrit ?</BodySm>
+          <Pressable onPress={() => router.back()} hitSlop={8}>
+            <BodySm color={accent.base} weight="600"> Se connecter</BodySm>
+          </Pressable>
+        </View>
+      </Pressable>
     </AuthLayout>
   );
 }
